@@ -10,13 +10,13 @@ from . import models, database
 load_dotenv()
 
 celery_app = Celery(
-    "tofu_monitor",
+    "kepler_monitor",
     broker=os.getenv("REDIS_URL"),
     backend=os.getenv("REDIS_URL")
 )
 
 celery_app.conf.beat_schedule = {
-    'monitor-tofu-endpoint': {
+    'monitor-kepler-endpoint': {
         'task': 'app.celery_worker.monitor_endpoint',
         'schedule': 60.0,  # Every 60 seconds
     },
@@ -28,17 +28,17 @@ celery_app.conf.beat_schedule = {
 
 @celery_app.task
 def monitor_endpoint():
-    tofu_url = os.getenv("TOFU_API_URL")
+    kepler_url = os.getenv("KEPLER_API_URL")
     db = database.SessionLocal()
     
     try:
         start_time = time.time()
-        response = httpx.get(tofu_url, timeout=10.0)
+        response = httpx.get(kepler_url, timeout=10.0)
         request_time = time.time() - start_time
         
         # Store the metrics in database
         db_metric = models.RequestMetric(
-            endpoint=tofu_url,
+            endpoint=kepler_url,
             request_time=request_time,
             status_code=response.status_code
         )
@@ -47,14 +47,14 @@ def monitor_endpoint():
         
         return {
             "status": "success",
-            "endpoint": tofu_url,
+            "endpoint": kepler_url,
             "request_time": request_time,
             "status_code": response.status_code
         }
     except Exception as e:
         # Store failed request
         db_metric = models.RequestMetric(
-            endpoint=tofu_url,
+            endpoint=kepler_url,
             request_time=-1,  # Use -1 to indicate error
             status_code=0  # Use 0 to indicate error
         )
@@ -63,7 +63,7 @@ def monitor_endpoint():
         
         return {
             "status": "error",
-            "endpoint": tofu_url,
+            "endpoint": kepler_url,
             "error": str(e)
         }
     finally:
@@ -73,7 +73,7 @@ def monitor_endpoint():
 def calculate_weekly_average():
     """Calculate weekly average request times and store in the database"""
     db = database.SessionLocal()
-    tofu_url = os.getenv("TOFU_API_URL")
+    kepler_url = os.getenv("KEPLER_API_URL")
     
     try:
         # Calculate date range for the last week
@@ -82,7 +82,7 @@ def calculate_weekly_average():
         
         # Query all successful requests from the last week
         metrics = db.query(models.RequestMetric).filter(
-            models.RequestMetric.endpoint == tofu_url,
+            models.RequestMetric.endpoint == kepler_url,
             models.RequestMetric.request_time > 0,  # Only successful requests
             models.RequestMetric.timestamp >= week_ago
         ).all()
@@ -93,7 +93,7 @@ def calculate_weekly_average():
             
             # Store weekly average
             db_avg = models.WeeklyAverage(
-                endpoint=tofu_url,
+                endpoint=kepler_url,
                 average_time=avg_time,
                 week_start=week_ago,
                 week_end=now

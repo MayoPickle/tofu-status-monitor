@@ -9,7 +9,7 @@ from typing import List
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Tofu Monitor API")
+app = FastAPI(title="Kepler API", description="A monitoring application by Valtech")
 
 # Add CORS middleware to allow frontend to connect
 app.add_middleware(
@@ -22,7 +22,7 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"status": "Tofu Monitor API is running"}
+    return {"status": "Kepler API is running", "author": "Valtech"}
 
 @app.get("/metrics/recent", response_model=List[schemas.RequestMetric])
 def get_recent_metrics(limit: int = 100, db: Session = Depends(get_db)):
