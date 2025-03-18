@@ -49,7 +49,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-import { Line as LineChart } from 'vue-chart-3'
+import { LineChart } from 'vue-chart-3'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)

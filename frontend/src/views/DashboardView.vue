@@ -1,51 +1,193 @@
 <template>
   <div class="dashboard">
-    <h1>Dashboard</h1>
-    
-    <div v-if="loading">
-      <p>Loading data...</p>
+    <div class="dashboard-header">
+      <h1>Dashboard</h1>
+      <div class="user-info">
+        <div class="connection-status" :class="connectionStatus">
+          <span v-if="connectionStatus === 'connected'" class="status-icon">●</span>
+          <span v-else-if="connectionStatus === 'reconnecting'" class="status-icon">◌</span>
+          <span v-else class="status-icon">✕</span>
+          <span class="status-text">{{ connectionStatusText }}</span>
+        </div>
+        <div class="user-profile" v-if="currentUser">
+          <span class="username">{{ currentUser.name || currentUser.username || 'Guest' }}</span>
+          <span class="role-badge" :class="currentUser.role">{{ currentUser.role }}</span>
+        </div>
+      </div>
     </div>
     
-    <div v-else-if="error">
+    <div v-if="loading && !error">
+      <div class="loading-indicator">
+        <div class="spinner"></div>
+        <p>Loading data...</p>
+      </div>
+    </div>
+    
+    <div v-if="error" class="error-container">
       <p class="error">{{ error }}</p>
+      <button v-if="connectionStatus === 'disconnected'" class="retry-button" @click="retryConnection">
+        Retry Connection
+      </button>
     </div>
     
-    <div v-else class="dashboard-grid">
-      <div class="card">
-        <h2>Current Status</h2>
-        <div class="status" :class="{'status-good': currentStatus === 'Good', 'status-bad': currentStatus === 'Bad'}">
-          {{ currentStatus }}
-        </div>
-        <p>Last checked: {{ lastChecked }}</p>
+    <div v-if="monitoredSites.length === 0" class="no-sites-message">
+      <h2>No Monitoring Sites Available</h2>
+      <p>You don't have access to any monitoring sites. Please contact your administrator.</p>
+    </div>
+    
+    <div v-if="(!loading || connectionStatus === 'reconnecting') && monitoredSites.length > 0">
+      <!-- Site selection tabs -->
+      <div class="site-tabs">
+        <button 
+          v-for="site in monitoredSites" 
+          :key="site.id"
+          :class="['site-tab', { active: selectedSite === site.id }]"
+          @click="selectedSite = site.id"
+        >
+          {{ site.name }}
+          <span 
+            v-if="siteStatus[site.id]" 
+            class="site-status-indicator"
+            :class="{'status-good': siteStatus[site.id] === 'Good', 'status-bad': siteStatus[site.id] === 'Bad'}"
+          ></span>
+        </button>
+        <button v-if="canAddSites" class="site-tab add-site-button" @click="showAddSiteModal = true">
+          <span class="add-icon">+</span> Add Site
+        </button>
       </div>
       
-      <div class="card">
-        <h2>24h Statistics</h2>
-        <div class="stats">
-          <div class="stat">
-            <span class="stat-label">Total Requests:</span>
-            <span class="stat-value">{{ stats.total_requests_24h }}</span>
+      <!-- Access Denied -->
+      <div v-if="!canViewCurrentSite" class="access-denied">
+        <h2>Access Denied</h2>
+        <p>You don't have permission to view this monitoring site.</p>
+      </div>
+      
+      <!-- Dashboard content for selected site -->
+      <div v-if="canViewCurrentSite" class="dashboard-grid" :class="{ 'limited-view': !canViewDetailedMetrics }">
+        <div class="card status-card">
+          <h2>Current Status</h2>
+          <div class="status" :class="{'status-good': currentStatus === 'Good', 'status-bad': currentStatus === 'Bad', 'status-unknown': currentStatus === 'Unknown'}">
+            {{ currentStatus }}
           </div>
-          <div class="stat">
-            <span class="stat-label">Success Rate:</span>
-            <span class="stat-value">{{ stats.success_rate_24h.toFixed(2) }}%</span>
+          <p class="last-checked">Last checked: {{ lastChecked }}</p>
+          <div class="url-info">
+            <span class="url-label">Monitoring URL:</span>
+            <span class="url-value">{{ selectedSiteUrl }}</span>
           </div>
-          <div class="stat">
-            <span class="stat-label">Avg Response Time:</span>
-            <span class="stat-value">{{ (stats.avg_response_time_24h * 1000).toFixed(2) }} ms</span>
+        </div>
+        
+        <!-- Detailed metrics only shown to authorized users -->
+        <div v-if="canViewDetailedMetrics" class="card">
+          <h2>24h Statistics</h2>
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-label">Total Requests:</span>
+              <span class="stat-value">{{ stats.total_requests_24h }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Success Rate:</span>
+              <span class="stat-value" :class="successRateClass">{{ stats.success_rate_24h.toFixed(2) }}%</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Avg Response Time:</span>
+              <span class="stat-value" :class="responseTimeClass">{{ (stats.avg_response_time_24h * 1000).toFixed(2) }} ms</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Failed Requests:</span>
+              <span class="stat-value">{{ stats.failed_requests_24h }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div v-if="canViewDetailedMetrics" class="card">
+          <h2>Uptime</h2>
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-label">Last 24h:</span>
+              <span class="stat-value" :class="getUptimeClass(24)">{{ calculateUptime(24) }}%</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Last 7 days:</span>
+              <span class="stat-value" :class="getUptimeClass(168)">{{ calculateUptime(168) }}%</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Last 30 days:</span>
+              <span class="stat-value" :class="getUptimeClass(720)">{{ calculateUptime(720) }}%</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Current Month:</span>
+              <span class="stat-value" :class="getUptimeClass(0)">{{ calculateMonthlyUptime() }}%</span>
+            </div>
+          </div>
+        </div>
+        
+        <div v-if="canViewDetailedMetrics" class="card alerts-card">
+          <h2>Recent Alerts</h2>
+          <div v-if="recentAlerts.length" class="alerts-list">
+            <div v-for="(alert, index) in recentAlerts" :key="index" class="alert-item" :class="alert.severity">
+              <span class="alert-time">{{ formatAlertTime(alert.timestamp) }}</span>
+              <span class="alert-message">{{ alert.message }}</span>
+            </div>
+          </div>
+          <p v-else class="no-data">No recent alerts</p>
+        </div>
+        
+        <div class="card full-width chart-card" :class="{ 'limited-data': !canViewDetailedMetrics }">
+          <div class="chart-header">
+            <h2>Response Times</h2>
+            <div v-if="canViewDetailedMetrics" class="chart-controls">
+              <button 
+                v-for="period in chartPeriods" 
+                :key="period.value" 
+                :class="['chart-period-button', { active: selectedChartPeriod === period.value }]"
+                @click="selectedChartPeriod = period.value"
+              >
+                {{ period.label }}
+              </button>
+            </div>
+          </div>
+          
+          <div v-if="!canViewDetailedMetrics" class="limited-access-message">
+            <p>You have limited access to this monitoring site.</p>
+            <p>Login with higher privileges to view detailed metrics and historical data.</p>
+          </div>
+          
+          <div v-else class="chart-container">
+            <LineChart 
+              v-if="chartData.labels.length" 
+              :chart-data="chartData"
+              :options="chartOptions"
+            />
+            <p v-else class="no-data">No data available</p>
           </div>
         </div>
       </div>
-      
-      <div class="card full-width">
-        <h2>Recent Response Times</h2>
-        <div class="chart-container">
-          <LineChart 
-            v-if="chartData.labels.length" 
-            :chart-data="chartData"
-            :options="chartOptions"
-          />
-          <p v-else>No data available</p>
+    </div>
+    
+    <!-- Add Site Modal (hidden by default) -->
+    <div v-if="showAddSiteModal && canAddSites" class="modal-backdrop" @click.self="showAddSiteModal = false">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Add Monitoring Site</h3>
+          <button class="close-button" @click="showAddSiteModal = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="site-name">Site Name</label>
+            <input type="text" id="site-name" v-model="newSite.name" placeholder="Production API">
+          </div>
+          <div class="form-group">
+            <label for="site-url">URL to Monitor</label>
+            <input type="text" id="site-url" v-model="newSite.url" placeholder="https://api.example.com/health">
+          </div>
+          <div class="form-group">
+            <label for="site-id">Site ID (for API)</label>
+            <input type="text" id="site-id" v-model="newSite.id" placeholder="prod-api">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-button" @click="showAddSiteModal = false">Cancel</button>
+          <button class="add-button" @click="addNewSite" :disabled="!isNewSiteValid">Add Site</button>
         </div>
       </div>
     </div>
@@ -53,10 +195,11 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import axios from 'axios'
-import { Line as LineChart } from 'vue-chart-3'
+import { LineChart } from 'vue-chart-3'
 import { Chart, registerables } from 'chart.js'
+import userStore, { PERMISSIONS } from '../store/userStore'
 
 Chart.register(...registerables)
 
@@ -70,6 +213,10 @@ export default {
     const loading = ref(true)
     const error = ref(null)
     const recentMetrics = ref([])
+    const connectionStatus = ref('connected') // 'connected', 'reconnecting', 'disconnected'
+    const reconnectAttempts = ref(0)
+    const maxReconnectAttempts = 5
+    const reconnectInterval = ref(null)
     const stats = ref({
       total_requests_24h: 0,
       successful_requests_24h: 0,
@@ -77,27 +224,123 @@ export default {
       success_rate_24h: 0,
       avg_response_time_24h: 0
     })
-
+    
+    // Multiple site monitoring
+    const monitoredSites = ref([
+      { id: 'main', name: 'Main API', url: 'https://api.example.com' },
+      { id: 'backup', name: 'Backup API', url: 'https://backup-api.example.com' },
+      { id: 'staging', name: 'Staging', url: 'https://staging-api.example.com' }
+    ])
+    
+    // User role permissions
+    const canViewDetailedMetrics = computed(() => 
+      userStore.hasPermission(PERMISSIONS.VIEW_DETAILED_METRICS)
+    )
+    
+    const canAddSites = computed(() => 
+      userStore.hasPermission(PERMISSIONS.ADD_SITES)
+    )
+    
+    const isAdmin = computed(() => userStore.isAdmin())
+    
+    // Filter sites based on user permissions
+    const accessibleSites = computed(() => {
+      if (isAdmin.value || userStore.isMaintainer()) {
+        return monitoredSites.value
+      }
+      
+      // Regular users can only see their assigned sites
+      return monitoredSites.value.filter(site => 
+        userStore.canAccessSite(site.id)
+      )
+    })
+    
+    const selectedSite = ref('main')
+    
+    // Set initial site selection based on accessible sites
+    watch(() => accessibleSites.value, (sites) => {
+      if (sites.length > 0 && !sites.some(site => site.id === selectedSite.value)) {
+        selectedSite.value = sites[0].id
+      }
+    }, { immediate: true })
+    
     const fetchData = async () => {
-      loading.value = true
+      if (connectionStatus.value === 'disconnected' && reconnectAttempts.value >= maxReconnectAttempts) {
+        return // Stop trying if max attempts reached
+      }
+      
+      loading.value = connectionStatus.value !== 'reconnecting' // Don't show loading if reconnecting
       error.value = null
       
       try {
-        // Fetch recent metrics
+        // Get the current selected site
+        const site = monitoredSites.value.find(s => s.id === selectedSite.value)
+        
+        // Fetch recent metrics for the selected site
         const metricsResponse = await axios.get(`${apiUrl}/metrics/recent`, {
-          params: { limit: 20 }
+          params: { 
+            limit: 20,
+            site: site.id
+          },
+          timeout: 10000 // 10 second timeout
         })
         recentMetrics.value = metricsResponse.data.reverse() // Reverse to get chronological order
         
-        // Fetch statistics
-        const statsResponse = await axios.get(`${apiUrl}/metrics/stats`)
+        // Fetch statistics for the selected site
+        const statsResponse = await axios.get(`${apiUrl}/metrics/stats`, {
+          params: { site: site.id },
+          timeout: 10000 // 10 second timeout
+        })
         stats.value = statsResponse.data
+        
+        // Reset connection status if previously reconnecting
+        if (connectionStatus.value === 'reconnecting') {
+          connectionStatus.value = 'connected'
+          reconnectAttempts.value = 0
+          if (reconnectInterval.value) {
+            clearInterval(reconnectInterval.value)
+            reconnectInterval.value = null
+          }
+        }
         
         loading.value = false
       } catch (err) {
-        error.value = `Error loading data: ${err.message}`
+        console.error('API Error:', err)
+        
+        // Handle different error scenarios
+        if (err.code === 'ECONNABORTED') {
+          error.value = 'Connection timed out. Server may be under heavy load.'
+        } else if (err.response) {
+          // The server responded with an error status code
+          error.value = `Server error: ${err.response.status} - ${err.response.statusText}`
+        } else if (err.request) {
+          // Request was made but no response received
+          if (connectionStatus.value === 'connected') {
+            connectionStatus.value = 'reconnecting'
+            reconnectAttempts.value = 1
+            error.value = 'Connection to server lost. Attempting to reconnect...'
+            
+            // Setup reconnect interval if not already set
+            if (!reconnectInterval.value) {
+              reconnectInterval.value = setInterval(() => {
+                if (reconnectAttempts.value < maxReconnectAttempts) {
+                  reconnectAttempts.value++
+                  error.value = `Connection to server lost. Reconnect attempt ${reconnectAttempts.value}/${maxReconnectAttempts}...`
+                  fetchData()
+                } else {
+                  connectionStatus.value = 'disconnected'
+                  error.value = 'Unable to connect to the server. Please check your network connection or try again later.'
+                  clearInterval(reconnectInterval.value)
+                }
+              }, 5000) // Try every 5 seconds
+            }
+          }
+        } else {
+          // Something else happened
+          error.value = `Error loading data: ${err.message}`
+        }
+        
         loading.value = false
-        console.error(err)
       }
     }
     
@@ -116,17 +359,47 @@ export default {
     })
     
     const chartData = computed(() => {
+      let dataPoints = []
+      let labels = []
+      
+      switch (selectedChartPeriod.value) {
+        case '24h':
+          dataPoints = recentMetrics.value.map(m => m.request_time * 1000)
+          labels = recentMetrics.value.map(m => {
+            const date = new Date(m.timestamp)
+            return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
+          })
+          break
+          
+        case '7d':
+          // Mock data for 7 days - in a real app this would come from the API
+          dataPoints = Array.from({ length: 7 }, () => Math.floor(100 + Math.random() * 400))
+          labels = Array.from({ length: 7 }, (_, i) => {
+            const date = new Date()
+            date.setDate(date.getDate() - 6 + i)
+            return date.toLocaleDateString('en-US', { weekday: 'short' })
+          })
+          break
+          
+        case '30d':
+          // Mock data for 30 days - in a real app this would come from the API
+          dataPoints = Array.from({ length: 30 }, () => Math.floor(100 + Math.random() * 400))
+          labels = Array.from({ length: 30 }, (_, i) => {
+            const date = new Date()
+            date.setDate(date.getDate() - 29 + i)
+            return `${date.getDate()}/${date.getMonth() + 1}`
+          })
+          break
+      }
+      
       return {
-        labels: recentMetrics.value.map(m => {
-          const date = new Date(m.timestamp)
-          return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
-        }),
+        labels,
         datasets: [
           {
             label: 'Response Time (ms)',
             backgroundColor: 'rgba(54, 162, 235, 0.2)',
             borderColor: 'rgb(54, 162, 235)',
-            data: recentMetrics.value.map(m => m.request_time * 1000), // Convert to ms
+            data: dataPoints,
             tension: 0.2
           }
         ]
@@ -153,10 +426,183 @@ export default {
       }
     }
     
+    // Calculate uptime percentage (placeholder function)
+    const calculateUptime = (hours) => {
+      // This is a placeholder - in a real app, you'd calculate this from actual data
+      // For now, just return a random value between 95 and 99.9
+      return (hours + Math.random() * 4.9).toFixed(2)
+    }
+    
+    // Calculate monthly uptime
+    const calculateMonthlyUptime = () => {
+      // In a real app, this would calculate uptime for the current month
+      return (97 + Math.random() * 2.9).toFixed(2)
+    }
+    
+    // Get uptime class based on the value
+    const getUptimeClass = (hours) => {
+      const value = parseFloat(hours ? calculateUptime(hours) : calculateMonthlyUptime())
+      if (value >= 99.9) return 'excellent'
+      if (value >= 99.0) return 'good'
+      if (value >= 98.0) return 'average'
+      return 'poor'
+    }
+    
+    // Retry connection after disconnect
+    const retryConnection = () => {
+      connectionStatus.value = 'reconnecting'
+      reconnectAttempts.value = 1
+      fetchData()
+    }
+    
+    // Connection status text
+    const connectionStatusText = computed(() => {
+      switch (connectionStatus.value) {
+        case 'connected': return 'Connected'
+        case 'reconnecting': return `Reconnecting (${reconnectAttempts.value}/${maxReconnectAttempts})`
+        case 'disconnected': return 'Disconnected'
+        default: return 'Unknown'
+      }
+    })
+    
+    // Selected site URL
+    const selectedSiteUrl = computed(() => {
+      const site = monitoredSites.value.find(s => s.id === selectedSite.value)
+      return site ? site.url : ''
+    })
+    
+    // Success rate styling
+    const successRateClass = computed(() => {
+      const rate = stats.value.success_rate_24h
+      if (rate >= 99.9) return 'excellent'
+      if (rate >= 99.0) return 'good'
+      if (rate >= 95.0) return 'average'
+      return 'poor'
+    })
+    
+    // Response time styling
+    const responseTimeClass = computed(() => {
+      const time = stats.value.avg_response_time_24h * 1000 // ms
+      if (time < 100) return 'excellent'
+      if (time < 300) return 'good'
+      if (time < 1000) return 'average'
+      return 'poor'
+    })
+    
+    // Site statuses
+    const siteStatus = ref({})
+    
+    // Fetch status for all sites
+    const fetchAllSiteStatuses = async () => {
+      for (const site of monitoredSites.value) {
+        try {
+          const response = await axios.get(`${apiUrl}/metrics/status`, {
+            params: { site: site.id },
+            timeout: 5000
+          })
+          siteStatus.value[site.id] = response.data.status
+        } catch (err) {
+          console.error(`Error fetching status for ${site.id}:`, err)
+          siteStatus.value[site.id] = 'Bad'
+        }
+      }
+    }
+    
+    // Chart periods
+    const chartPeriods = [
+      { label: '24h', value: '24h' },
+      { label: '7d', value: '7d' },
+      { label: '30d', value: '30d' }
+    ]
+    const selectedChartPeriod = ref('24h')
+    
+    // Add site modal
+    const showAddSiteModal = ref(false)
+    const newSite = ref({
+      id: '',
+      name: '',
+      url: ''
+    })
+    
+    // Check if new site is valid
+    const isNewSiteValid = computed(() => {
+      return newSite.value.id && 
+             newSite.value.name && 
+             newSite.value.url && 
+             newSite.value.url.startsWith('http')
+    })
+    
+    // Add new site
+    const addNewSite = () => {
+      if (isNewSiteValid.value) {
+        monitoredSites.value.push({ ...newSite.value })
+        showAddSiteModal.value = false
+        newSite.value = { id: '', name: '', url: '' }
+        selectedSite.value = monitoredSites.value[monitoredSites.value.length - 1].id
+      }
+    }
+    
+    // Mock recent alerts (in a real app, these would come from the API)
+    const recentAlerts = ref([
+      { 
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        message: 'Response time threshold exceeded (500ms)', 
+        severity: 'warning'
+      },
+      { 
+        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
+        message: 'Service unavailable for 3 minutes', 
+        severity: 'critical'
+      },
+      { 
+        timestamp: new Date(Date.now() - 25 * 60 * 60 * 1000), // 25 hours ago
+        message: 'SSL certificate expiring in 10 days', 
+        severity: 'info'
+      }
+    ])
+    
+    // Format alert time
+    const formatAlertTime = (timestamp) => {
+      const date = new Date(timestamp)
+      const now = new Date()
+      const diffMs = now - date
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+      
+      if (diffHours < 24) {
+        return `${diffHours}h ago`
+      } else {
+        return date.toLocaleDateString()
+      }
+    }
+    
+    // Check if current user can access the site
+    const canViewCurrentSite = computed(() => {
+      return userStore.canAccessSite(selectedSite.value)
+    })
+    
     onMounted(() => {
       fetchData()
+      fetchAllSiteStatuses()
+      
       // Refresh data every 60 seconds
-      setInterval(fetchData, 60000)
+      const refreshInterval = setInterval(fetchData, 60000)
+      
+      // Refresh site statuses every 3 minutes
+      const statusInterval = setInterval(fetchAllSiteStatuses, 180000)
+      
+      // Clean up intervals on component unmount
+      onUnmounted(() => {
+        clearInterval(refreshInterval)
+        clearInterval(statusInterval)
+        if (reconnectInterval.value) {
+          clearInterval(reconnectInterval.value)
+        }
+      })
+    })
+    
+    // Watch for changes in chart period and selected site
+    watch([selectedChartPeriod, selectedSite], () => {
+      fetchData()
     })
     
     return {
@@ -167,7 +613,32 @@ export default {
       currentStatus,
       lastChecked,
       chartData,
-      chartOptions
+      chartOptions,
+      monitoredSites: accessibleSites,
+      selectedSite,
+      calculateUptime,
+      connectionStatus,
+      connectionStatusText,
+      retryConnection,
+      chartPeriods,
+      selectedChartPeriod,
+      showAddSiteModal: computed(() => showAddSiteModal.value && canAddSites.value),
+      newSite,
+      isNewSiteValid,
+      addNewSite,
+      selectedSiteUrl,
+      siteStatus,
+      recentAlerts,
+      formatAlertTime,
+      getUptimeClass,
+      successRateClass,
+      responseTimeClass,
+      calculateMonthlyUptime,
+      canViewDetailedMetrics,
+      canAddSites,
+      isAdmin,
+      canViewCurrentSite,
+      currentUser: computed(() => userStore.currentUser())
     }
   }
 }
@@ -176,6 +647,71 @@ export default {
 <style scoped>
 .dashboard {
   max-width: 100%;
+  height: 100%; /* Take up all available height */
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.status-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-text {
+  font-weight: 500;
+  color: #666;
+}
+
+.site-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 1rem;
+  flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+}
+
+.site-tab {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  background-color: #f0f0f0;
+  color: #666;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.site-tab:hover {
+  background-color: #e0e0e0;
+}
+
+.site-tab.active {
+  background-color: #2c3e50;
+  color: white;
 }
 
 .dashboard-grid {
@@ -217,6 +753,10 @@ export default {
   color: #e53935;
 }
 
+.status-unknown {
+  color: #666;
+}
+
 .stats {
   display: flex;
   flex-direction: column;
@@ -250,5 +790,409 @@ export default {
   padding: 1rem;
   border-radius: 4px;
   margin: 1rem 0;
+}
+
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #2c3e50;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.retry-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-button:hover {
+  background-color: #34495e;
+}
+
+.site-status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 0.5rem;
+}
+
+.site-status-indicator.status-good {
+  background-color: #42b983;
+}
+
+.site-status-indicator.status-bad {
+  background-color: #e53935;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chart-period-button {
+  padding: 0.5rem 1rem;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chart-period-button:hover {
+  background-color: #e0e0e0;
+}
+
+.chart-period-button.active {
+  background-color: #2c3e50;
+  color: white;
+}
+
+.no-data {
+  text-align: center;
+  color: #666;
+  margin-top: 1rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+}
+
+.modal-body {
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.cancel-button,
+.add-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button {
+  background-color: #f0f0f0;
+}
+
+.cancel-button:hover {
+  background-color: #e0e0e0;
+}
+
+.add-button {
+  background-color: #2c3e50;
+  color: white;
+}
+
+.add-button:hover {
+  background-color: #34495e;
+}
+
+.stat-value.excellent {
+  color: #42b983;
+  font-weight: bold;
+}
+
+.stat-value.good {
+  color: #2c9f6e;
+  font-weight: bold;
+}
+
+.stat-value.average {
+  color: #e6a23c;
+  font-weight: bold;
+}
+
+.stat-value.poor {
+  color: #e53935;
+  font-weight: bold;
+}
+
+.connection-status.connected .status-icon {
+  color: #42b983;
+}
+
+.connection-status.reconnecting .status-icon {
+  color: #e6a23c;
+  animation: blink 1s infinite;
+}
+
+.connection-status.disconnected .status-icon {
+  color: #e53935;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alert-item {
+  display: flex;
+  padding: 0.75rem;
+  border-radius: 4px;
+  border-left: 4px solid;
+}
+
+.alert-item.info {
+  background-color: rgba(54, 162, 235, 0.1);
+  border-left-color: #36a2eb;
+}
+
+.alert-item.warning {
+  background-color: rgba(255, 159, 64, 0.1);
+  border-left-color: #ff9f40;
+}
+
+.alert-item.critical {
+  background-color: rgba(229, 57, 53, 0.1);
+  border-left-color: #e53935;
+}
+
+.alert-time {
+  margin-right: 0.75rem;
+  color: #666;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.status-card .url-info {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #eee;
+  font-size: 0.9rem;
+}
+
+.url-label {
+  color: #666;
+  margin-right: 0.5rem;
+}
+
+.url-value {
+  word-break: break-all;
+  font-family: monospace;
+}
+
+.add-site-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.add-icon {
+  font-size: 1.2rem;
+}
+
+/* Disable button styling */
+.add-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.last-checked {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.no-sites-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.no-sites-message h2 {
+  margin-bottom: 1rem;
+}
+
+.no-sites-message p {
+  text-align: center;
+}
+
+.access-denied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.access-denied h2 {
+  margin-bottom: 1rem;
+}
+
+.access-denied p {
+  text-align: center;
+}
+
+.limited-view {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.limited-data {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.limited-access-message {
+  padding: 1rem;
+  text-align: center;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.username {
+  font-weight: 500;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.role-badge.admin {
+  background-color: #e53935;
+  color: white;
+}
+
+.role-badge.maintainer {
+  background-color: #42b983;
+  color: white;
+}
+
+.role-badge.user {
+  background-color: #3490dc;
+  color: white;
+}
+
+.role-badge.guest {
+  background-color: #adb5bd;
+  color: white;
+}
+
+.chart-card.limited-data {
+  position: relative;
+}
+
+.limited-access-message {
+  background-color: rgba(247, 247, 247, 0.9);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+}
+
+.limited-access-message p:first-child {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
 }
 </style> 
