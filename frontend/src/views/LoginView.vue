@@ -172,7 +172,7 @@ export default {
 }
 
 .login-card {
-  background-color: white;
+  background-color: var(--bg-secondary);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   padding: 2rem;
@@ -199,7 +199,7 @@ export default {
   margin: 0;
   font-size: 1.75rem;
   font-weight: 600;
-  color: var(--dark);
+  color: var(--text-primary);
 }
 
 .error-message {
@@ -232,7 +232,7 @@ export default {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--dark);
+  color: var(--text-primary);
   font-size: 0.9rem;
 }
 
@@ -253,11 +253,13 @@ export default {
 .form-group input {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border: 1px solid var(--gray-light);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
   font-size: 1rem;
   outline: none;
   transition: var(--transition);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .form-group input:focus {
@@ -321,17 +323,17 @@ export default {
   left: 0;
   right: 0;
   height: 1px;
-  background-color: var(--gray-light);
+  background-color: var(--border-color);
   z-index: 1;
 }
 
 .login-divider span {
   display: inline-block;
-  background-color: white;
+  background-color: var(--bg-secondary);
   padding: 0 1rem;
   position: relative;
   z-index: 2;
-  color: var(--gray);
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
@@ -349,7 +351,8 @@ export default {
   border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
-  border: 1px solid var(--gray-light);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
 }
 
 .account-item:hover {
@@ -380,12 +383,12 @@ export default {
 
 .account-name {
   font-weight: 500;
-  color: var(--dark);
+  color: var(--text-primary);
 }
 
 .account-credentials {
   font-size: 0.8rem;
-  color: var(--gray);
+  color: var(--text-secondary);
 }
 
 .guest-login {
@@ -399,8 +402,8 @@ export default {
   width: 100%;
   padding: 0.75rem;
   background-color: transparent;
-  color: var(--gray-dark);
-  border: 1px solid var(--gray-light);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);

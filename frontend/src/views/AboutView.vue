@@ -114,13 +114,13 @@
 .about-header h1 {
   font-size: 2.5rem;
   font-weight: 700;
-  color: var(--dark);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .subtitle {
   font-size: 1.25rem;
-  color: var(--gray);
+  color: var(--text-secondary);
   max-width: 600px;
   margin: 0 auto;
 }
@@ -132,7 +132,7 @@
 }
 
 .card {
-  background: white;
+  background: var(--bg-secondary);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 2rem;
@@ -141,6 +141,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border-color);
 }
 
 .card:hover {
@@ -192,23 +193,23 @@
   margin-bottom: 1.25rem;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--dark);
+  color: var(--text-primary);
 }
 
 .card p {
   font-size: 1rem;
   line-height: 1.6;
-  color: var(--gray-dark);
+  color: var(--text-secondary);
   margin-bottom: 0;
 }
 
 code {
-  background-color: #f1f5f9;
+  background-color: var(--bg-primary);
   padding: 0.2rem 0.4rem;
   border-radius: 4px;
   font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
   font-size: 0.9em;
-  color: var(--primary-dark);
+  color: var(--primary);
 }
 
 .tech-grid {
@@ -222,7 +223,7 @@ code {
   font-size: 1.1rem;
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: var(--dark);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -233,7 +234,7 @@ code {
 
 .tech-item li {
   margin-bottom: 0.5rem;
-  color: var(--gray-dark);
+  color: var(--text-secondary);
 }
 
 .metrics-list {
@@ -272,20 +273,20 @@ code {
 .metric-item h3 {
   font-size: 1.1rem;
   margin: 0 0 0.25rem 0;
-  color: var(--dark);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .metric-item p {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--gray);
+  color: var(--text-secondary);
 }
 
 .about-footer {
   margin-top: 3rem;
   text-align: center;
-  color: var(--gray);
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 

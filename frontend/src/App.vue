@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" :class="{ 'dark-mode': isDarkMode }">
     <div class="app-container">
       <!-- Left Sidebar Navigation -->
       <aside class="sidebar">
@@ -65,8 +65,13 @@
             <h1>{{ $route.name }}</h1>
           </div>
           <div class="header-actions">
-            <div class="theme-toggle">
-              <svg viewBox="0 0 24 24" class="theme-icon"><path d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z" /></svg>
+            <div class="theme-toggle" @click="toggleDarkMode">
+              <svg v-if="!isDarkMode" viewBox="0 0 24 24" class="theme-icon">
+                <path d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" class="theme-icon">
+                <path d="M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z" />
+              </svg>
             </div>
           </div>
         </header>
@@ -85,13 +90,23 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import userStore, { PERMISSIONS } from './store/userStore'
 
 export default {
   setup() {
     const router = useRouter()
+    const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
+    
+    // Watch for dark mode changes and update root class
+    watch(isDarkMode, (newValue) => {
+      if (newValue) {
+        document.documentElement.classList.add('dark-mode')
+      } else {
+        document.documentElement.classList.remove('dark-mode')
+      }
+    }, { immediate: true })
     
     const currentUser = computed(() => userStore.currentUser())
     const isAuthenticated = computed(() => userStore.isAuthenticated())
@@ -124,6 +139,12 @@ export default {
       router.push('/login')
     }
     
+    // Toggle dark mode
+    const toggleDarkMode = () => {
+      isDarkMode.value = !isDarkMode.value
+      localStorage.setItem('darkMode', isDarkMode.value)
+    }
+    
     return {
       currentUser,
       isAuthenticated,
@@ -131,7 +152,9 @@ export default {
       canViewDetailedMetrics,
       displayName,
       userInitials,
-      handleLogout
+      handleLogout,
+      isDarkMode,
+      toggleDarkMode
     }
   }
 }
@@ -155,6 +178,29 @@ export default {
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   --radius: 8px;
   --transition: all 0.2s ease;
+  
+  /* Light mode (default) */
+  --bg-body: #f9f9fb;
+  --bg-primary: #f9f9fb;
+  --bg-secondary: white;
+  --text-primary: #264653;
+  --text-secondary: #6c757d;
+  --border-color: #dee2e6;
+}
+
+/* Dark mode */
+:root.dark-mode {
+  --primary: #3ebbab;
+  --primary-light: #5eccbc;
+  --primary-dark: #2e9b8b;
+  --bg-body: #121212;
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --text-primary: #e9e9e9;
+  --text-secondary: #b0b0b0;
+  --border-color: #2c2c2c;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -169,10 +215,11 @@ body {
     Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f9f9fb;
-  color: var(--dark);
+  background-color: var(--bg-body);
+  color: var(--text-primary);
   overflow: hidden;
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #app {
@@ -180,6 +227,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background-color: var(--bg-body);
 }
 
 .app-container {
@@ -191,18 +239,19 @@ body {
 /* Sidebar Styles */
 .sidebar {
   width: 280px;
-  background-color: white;
-  color: var(--dark);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow);
   overflow-y: auto;
   z-index: 10;
+  border-right: 1px solid var(--border-color);
 }
 
 .sidebar-header {
   padding: 1.5rem;
-  border-bottom: 1px solid var(--gray-light);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .logo {
@@ -234,7 +283,7 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  color: var(--gray-dark);
+  color: var(--text-secondary);
   text-decoration: none;
   padding: 0.75rem 1.5rem;
   margin: 0.25rem 0.75rem;
@@ -271,7 +320,7 @@ body {
 /* Sidebar Footer */
 .sidebar-footer {
   padding: 1.5rem;
-  border-top: 1px solid var(--gray-light);
+  border-top: 1px solid var(--border-color);
   margin-top: auto;
 }
 
@@ -301,7 +350,7 @@ body {
 
 .user-name {
   font-weight: 600;
-  color: var(--dark);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -361,18 +410,19 @@ body {
 
 .content-header {
   padding: 1rem 2rem;
-  background-color: white;
+  background-color: var(--bg-secondary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .page-title h1 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--dark);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -408,12 +458,13 @@ body {
 }
 
 footer {
-  background-color: white;
+  background-color: var(--bg-secondary);
   text-align: center;
   padding: 1rem;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
-  color: var(--gray);
+  color: var(--text-secondary);
   font-size: 0.875rem;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Transitions */
