@@ -15,4 +15,12 @@ __pycache__
 *.db-lock-trace
 *.db-lock-lock
 
+# Celery files
 celerybeat-schedule
+celerybeat-schedule.*
+celerybeat.pid
+celery.log
+
+# Logs directory
+logs/
+backend/logs/

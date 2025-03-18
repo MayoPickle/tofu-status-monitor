@@ -5,7 +5,7 @@
         <svg viewBox="0 0 24 24" class="logo-icon">
           <path d="M12,2L1,21H23L12,2M12,6.7L16,13H8L12,6.7Z" />
         </svg>
-        <h1>Login to Kepler</h1>
+        <h1>{{ isRegistering ? 'Create Account' : 'Login to Kepler' }}</h1>
       </div>
       
       <div v-if="error" class="error-message">
@@ -15,7 +15,7 @@
         <span>{{ error }}</span>
       </div>
       
-      <form @submit.prevent="handleLogin" class="login-form">
+      <form @submit.prevent="onSubmit" class="login-form">
         <div class="form-group">
           <label for="username">Username</label>
           <div class="input-wrapper">
@@ -32,6 +32,39 @@
             />
           </div>
         </div>
+
+        <div v-if="isRegistering" class="form-group">
+          <label for="email">Email</label>
+          <div class="input-wrapper">
+            <svg viewBox="0 0 24 24" class="input-icon">
+              <path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z" />
+            </svg>
+            <input 
+              type="email" 
+              id="email" 
+              v-model="email" 
+              placeholder="Enter your email"
+              required
+              :disabled="loading"
+            />
+          </div>
+        </div>
+
+        <div v-if="isRegistering" class="form-group">
+          <label for="name">Full Name</label>
+          <div class="input-wrapper">
+            <svg viewBox="0 0 24 24" class="input-icon">
+              <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+            </svg>
+            <input 
+              type="text" 
+              id="name" 
+              v-model="name" 
+              placeholder="Enter your full name"
+              :disabled="loading"
+            />
+          </div>
+        </div>
         
         <div class="form-group">
           <label for="password">Password</label>
@@ -43,31 +76,38 @@
               type="password" 
               id="password" 
               v-model="password" 
-              placeholder="Enter your password"
+              :placeholder="isRegistering ? 'Choose a password' : 'Enter your password'"
               required
               :disabled="loading"
             />
           </div>
         </div>
         
-        <button type="submit" class="login-button" :disabled="loading">
-          <span v-if="loading" class="spinner">
-            <svg viewBox="0 0 24 24">
-              <path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z" />
-            </svg>
-          </span>
-          <span v-else>Sign in</span>
+        <button 
+          type="submit" 
+          class="submit-button" 
+          :disabled="loading"
+        >
+          <span v-if="!loading">{{ isRegistering ? 'Create Account' : 'Sign In' }}</span>
+          <span v-else>Please wait...</span>
         </button>
       </form>
-      
-      <div class="login-divider">
-        <span>or try a demo account</span>
+
+      <div class="auth-options">
+        <button 
+          class="switch-mode-button" 
+          @click="toggleMode"
+          :disabled="loading"
+        >
+          {{ isRegistering ? 'Already have an account? Sign in' : 'Need an account? Register' }}
+        </button>
       </div>
       
-      <div class="demo-accounts">
+      <div class="demo-accounts" v-if="!isRegistering">
+        <h3>Demo Accounts</h3>
         <div class="account-item" @click="fillCredentials('admin', 'admin123')">
           <svg viewBox="0 0 24 24" class="account-icon admin-icon">
-            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z" />
+            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z" />
           </svg>
           <div class="account-info">
             <div class="account-name">Admin</div>
@@ -94,7 +134,7 @@
         </div>
       </div>
       
-      <div class="guest-login">
+      <div class="guest-login" v-if="!isRegistering">
         <button class="guest-button" @click="continueAsGuest">
           <svg viewBox="0 0 24 24" class="guest-icon">
             <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,8.39C13.57,9.4 15.42,10 17.42,10C18.2,10 18.95,9.91 19.67,9.74C19.88,10.45 20,11.21 20,12C20,16.41 16.41,20 12,20C9,20 6.39,18.34 5,15.89L6.61,14V16H13.5C14.33,16 15,15.33 15,14.5C15,12.57 13.43,11 11.5,11H9V8.39C10,8.14 10.95,8 12,8.39Z" />
@@ -109,18 +149,31 @@
 <script>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import userStore from '../store/userStore'
+import store from '../store/userStore'
 
 export default {
   name: 'LoginView',
   setup() {
     const router = useRouter()
     const username = ref('')
+    const email = ref('')
+    const name = ref('')
     const password = ref('')
     const loading = ref(false)
     const error = ref('')
+    const isRegistering = ref(false)
+    
+    const onSubmit = async () => {
+      console.log('Form submitted', { isRegistering: isRegistering.value })
+      if (isRegistering.value) {
+        await handleRegister()
+      } else {
+        await handleLogin()
+      }
+    }
     
     const handleLogin = async () => {
+      console.log('handleLogin called')
       if (!username.value || !password.value) {
         error.value = 'Please enter both username and password'
         return
@@ -130,17 +183,51 @@ export default {
       error.value = ''
       
       try {
-        await userStore.login(username.value, password.value)
+        await store.login(username.value, password.value)
         router.push('/')
       } catch (err) {
+        console.error('Login error:', err)
         error.value = err.message || 'Login failed. Please try again.'
+      } finally {
+        loading.value = false
+      }
+    }
+
+    const handleRegister = async () => {
+      console.log('handleRegister called')
+      if (!username.value || !password.value || !email.value) {
+        error.value = 'Please fill in all required fields'
+        return
+      }
+      
+      loading.value = true
+      error.value = ''
+      console.log('Attempting to register with:', {
+        username: username.value,
+        email: email.value,
+        name: name.value
+      })
+      
+      try {
+        const response = await store.register({
+          username: username.value,
+          email: email.value,
+          name: name.value,
+          password: password.value
+        })
+        console.log('Registration response:', response)
+        await store.login(username.value, password.value)
+        router.push('/')
+      } catch (err) {
+        console.error('Registration error:', err)
+        error.value = err.message || 'Registration failed. Please try again.'
       } finally {
         loading.value = false
       }
     }
     
     const continueAsGuest = () => {
-      userStore.logout()
+      store.logout()
       router.push('/')
     }
     
@@ -148,15 +235,28 @@ export default {
       username.value = user
       password.value = pass
     }
+
+    const toggleMode = () => {
+      isRegistering.value = !isRegistering.value
+      error.value = ''
+      username.value = ''
+      email.value = ''
+      name.value = ''
+      password.value = ''
+    }
     
     return {
       username,
+      email,
+      name,
       password,
       loading,
       error,
-      handleLogin,
+      isRegistering,
+      onSubmit,
       continueAsGuest,
-      fillCredentials
+      fillCredentials,
+      toggleMode
     }
   }
 }
@@ -267,7 +367,7 @@ export default {
   box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.2);
 }
 
-.login-button {
+.submit-button {
   width: 100%;
   padding: 0.85rem;
   background-color: var(--primary);
@@ -283,31 +383,13 @@ export default {
   justify-content: center;
 }
 
-.login-button:hover {
+.submit-button:hover {
   background-color: var(--primary-dark);
 }
 
-.login-button:disabled {
+.submit-button:disabled {
   background-color: var(--gray-light);
   cursor: not-allowed;
-}
-
-.spinner {
-  display: inline-block;
-  animation: spin 1s linear infinite;
-  width: 20px;
-  height: 20px;
-}
-
-.spinner svg {
-  width: 100%;
-  height: 100%;
-  fill: white;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 .login-divider {
@@ -420,5 +502,31 @@ export default {
   height: 18px;
   fill: var(--gray);
   margin-right: 8px;
+}
+
+.switch-mode-button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  text-decoration: underline;
+  width: 100%;
+  transition: color 0.2s ease;
+}
+
+.switch-mode-button:hover {
+  color: var(--primary-dark);
+}
+
+.switch-mode-button:disabled {
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.auth-options {
+  margin-top: 1rem;
+  text-align: center;
 }
 </style> 

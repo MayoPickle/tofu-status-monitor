@@ -1,4 +1,8 @@
 import { reactive, readonly } from 'vue'
+import axios from 'axios'
+
+// API base URL
+const API_URL = ''  // 不使用/api前缀，直接让代理处理
 
 // User roles
 export const ROLES = {
@@ -91,6 +95,45 @@ const state = reactive({
   users: mockUsers
 })
 
+// HTTP client setup
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  timeout: 10000 // 10 seconds timeout
+})
+
+// Add request interceptor for debugging
+api.interceptors.request.use(config => {
+  console.log('Making request to:', config.url, {
+    method: config.method,
+    data: config.data,
+    headers: config.headers
+  })
+  return config
+})
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  response => {
+    console.log('Received response:', {
+      status: response.status,
+      data: response.data
+    })
+    return response
+  },
+  error => {
+    console.error('API Error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    })
+    throw error
+  }
+)
+
 // Getter methods
 const getters = {
   isAuthenticated: () => state.isAuthenticated,
@@ -127,38 +170,60 @@ const getters = {
 
 // Actions
 const actions = {
-  // Login action - in a real app, would call an API
+  // Register a new user
+  register: async (userData) => {
+    state.loading = true
+    state.error = null
+    console.log('Registering user with data:', userData)
+    
+    try {
+      const response = await api.post('/register', userData)
+      console.log('Registration successful:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Registration failed:', error)
+      state.error = error.response?.data?.detail || 'Registration failed'
+      throw new Error(state.error)
+    } finally {
+      state.loading = false
+    }
+  },
+  
+  // Login action
   login: async (username, password) => {
     state.loading = true
     state.error = null
     
     try {
-      // Simulate API call with 500ms delay
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Get token
+      const formData = new FormData()
+      formData.append('username', username)
+      formData.append('password', password)
       
-      const user = mockUsers.find(u => u.username === username && u.password === password)
+      console.log('Login: Sending token request to:', `${API_URL}/token`)
+      const tokenResponse = await api.post('/token', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      state.accessToken = tokenResponse.data.access_token
       
-      if (!user) {
-        throw new Error('Invalid username or password')
-      }
-      
-      // Clone the user object without the password
-      const userWithoutPassword = { ...user }
-      delete userWithoutPassword.password
-      
-      // Set authenticated user
-      state.currentUser = userWithoutPassword
+      // Get user data
+      console.log('Login: Getting user data from:', `${API_URL}/users/me`)
+      api.defaults.headers.common['Authorization'] = `Bearer ${state.accessToken}`
+      const userResponse = await api.get('/users/me')
+      state.currentUser = userResponse.data
       state.isAuthenticated = true
-      state.accessToken = 'mock-jwt-token-' + Math.random().toString(36).substr(2)
       
       // Store in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword))
+      localStorage.setItem('user', JSON.stringify(state.currentUser))
       localStorage.setItem('token', state.accessToken)
       
-      return userWithoutPassword
+      return state.currentUser
     } catch (error) {
-      state.error = error.message
-      throw error
+      console.error('Login error details:', error)
+      state.error = error.response?.data?.detail || 'Login failed'
+      throw new Error(state.error)
     } finally {
       state.loading = false
     }
@@ -271,14 +336,15 @@ const actions = {
   }
 }
 
-// Create and export the store
-export const userStore = {
+// Create the store object
+const store = {
   state: readonly(state),
   ...getters,
   ...actions
 }
 
 // Initialize auth when the store is imported
-userStore.initAuth()
+store.initAuth()
 
-export default userStore 
+// Export the store
+export default store 

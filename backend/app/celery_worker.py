@@ -5,15 +5,49 @@ from celery import Celery
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
+import logging
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from . import models, database
 
 load_dotenv()
+
+# 创建logs目录如果不存在
+logs_dir = Path(__file__).parent.parent / 'logs'
+logs_dir.mkdir(exist_ok=True)
+
+# 设置日志配置
+celery_log_file = logs_dir / 'celery.log'
+logger = logging.getLogger('celery')
+
+# 设置日志轮换，最大10MB，保留5个备份
+handler = RotatingFileHandler(
+    str(celery_log_file),
+    maxBytes=10*1024*1024,  # 10MB
+    backupCount=5
+)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
 
 celery_app = Celery(
     "kepler_monitor",
     broker=os.getenv("REDIS_URL"),
     backend=os.getenv("REDIS_URL")
 )
+
+celery_app.conf.update(
+    worker_log_file=str(logs_dir / 'celery_worker.log'),
+    beat_log_file=str(logs_dir / 'celery_beat.log'),
+    task_log_file=str(logs_dir / 'celery_tasks.log'),
+)
+
+# 日志轮换配置
+celery_app.conf.worker_log_size = 10 * 1024 * 1024  # 10MB
+celery_app.conf.worker_log_backups = 5
+celery_app.conf.beat_log_size = 10 * 1024 * 1024  # 10MB
+celery_app.conf.beat_log_backups = 5
 
 celery_app.conf.beat_schedule = {
     'monitor-kepler-endpoint': {
