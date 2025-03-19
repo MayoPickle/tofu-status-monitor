@@ -59,31 +59,13 @@
     <!-- Dashboard Content (visible when there are sites and data is loaded) -->
     <div v-if="(!loading || connectionStatus === 'reconnecting') && monitoredSites.length > 0">
       <!-- Site Selection Tabs -->
-      <div class="site-tabs-container">
-        <div class="site-tabs">
-          <button 
-            v-for="site in monitoredSites" 
-            :key="site.id"
-            :class="['site-tab', { active: selectedSite === site.id }]"
-            @click="selectedSite = site.id"
-          >
-            {{ site.name }}
-            <transition name="pulse" mode="out-in">
-              <span 
-                v-if="siteStatus[site.id]" 
-                class="site-status-indicator"
-                :class="{'status-good': siteStatus[site.id] === 'Good', 'status-bad': siteStatus[site.id] === 'Bad'}"
-              ></span>
-            </transition>
-          </button>
-          <button v-if="canAddSites" class="site-tab add-site-button" @click="showAddSiteModal = true">
-            <svg viewBox="0 0 24 24" width="16" height="16" class="add-icon">
-              <path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
-            </svg>
-            Add Site
-          </button>
-        </div>
-      </div>
+      <SiteTabs 
+        v-model="selectedSite" 
+        :sites="monitoredSites" 
+        :site-status="siteStatus" 
+        :show-add-button="canAddSites"
+        @add="showAddSiteModal = true"
+      />
       
       <!-- Access Denied -->
       <transition name="fade-up" mode="out-in">
@@ -102,239 +84,88 @@
       <transition name="fade-up" mode="out-in">
         <div v-if="canViewCurrentSite" class="dashboard-grid" :class="{ 'limited-view': !canViewDetailedMetrics }">
           <!-- Status Card -->
-          <div class="card status-card animate-in">
-            <div class="card-header">
-              <h2 class="card-title">Current Status</h2>
-              <div class="badge" :class="statusBadgeClass">{{ currentStatus }}</div>
-            </div>
-            <div class="card-body">
-              <div class="status-info">
-                <p class="last-checked">
-                  <svg viewBox="0 0 24 24" width="18" height="18" class="icon">
-                    <path fill="currentColor" d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" />
-                  </svg>
-                  Last checked: {{ lastChecked }}
-                </p>
-                <div class="url-info">
-                  <svg viewBox="0 0 24 24" width="18" height="18" class="icon">
-                    <path fill="currentColor" d="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.56,13.34 9.5,12.68 9.5,12C9.5,11.32 9.56,10.65 9.66,10H14.34C14.43,10.65 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,19.96C11.17,18.76 10.5,17.43 10.09,16H13.91C13.5,17.43 12.83,18.76 12,19.96M8,8H5.08C6.03,6.34 7.57,5.06 9.4,4.44C8.8,5.55 8.35,6.75 8,8M5.08,16H8C8.35,17.25 8.8,18.45 9.4,19.56C7.57,18.93 6.03,17.65 5.08,16M4.26,14C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H7.64C7.56,10.66 7.5,11.32 7.5,12C7.5,12.68 7.56,13.34 7.64,14M12,4.03C12.83,5.23 13.5,6.57 13.91,8H10.09C10.5,6.57 11.17,5.23 12,4.03M18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44C16.43,5.07 17.96,6.34 18.92,8M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
-                  </svg>
-                  <span class="url-value">{{ selectedSiteUrl }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <StatusCard 
+            :status="currentStatus" 
+            :last-checked="lastChecked" 
+            :url="selectedSiteUrl"
+          />
           
           <!-- Statistics Card (for authorized users) -->
-          <div v-if="canViewDetailedMetrics" class="card stats-card animate-in" style="--delay: 0.1s">
-            <div class="card-header">
-              <h2 class="card-title">24h Statistics</h2>
-              <button class="btn btn-outline btn-sm refresh-btn" @click="refreshStats">
-                <svg viewBox="0 0 24 24" width="16" height="16">
-                  <path fill="currentColor" d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" />
-                </svg>
-                Refresh
-              </button>
-            </div>
-            <div class="card-body">
-              <div class="stats-grid">
-                <div class="stat-item animate-in" style="--delay: 0.15s">
-                  <div class="stat-value">{{ stats.total_requests_24h }}</div>
-                  <div class="stat-label">Total Requests</div>
-                </div>
-                <div class="stat-item animate-in" style="--delay: 0.2s">
-                  <div class="stat-value" :class="successRateClass">{{ stats.success_rate_24h.toFixed(2) }}%</div>
-                  <div class="stat-label">Success Rate</div>
-                </div>
-                <div class="stat-item animate-in" style="--delay: 0.25s">
-                  <div class="stat-value" :class="responseTimeClass">{{ (stats.avg_response_time_24h * 1000).toFixed(2) }} ms</div>
-                  <div class="stat-label">Avg Response Time</div>
-                </div>
-                <div class="stat-item animate-in" style="--delay: 0.3s">
-                  <div class="stat-value">{{ stats.failed_requests_24h }}</div>
-                  <div class="stat-label">Failed Requests</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <StatsCard 
+            v-if="canViewDetailedMetrics" 
+            title="24h Statistics"
+            :stats="statsItems"
+            @refresh="refreshStats"
+          />
           
           <!-- Uptime Card -->
-          <div v-if="canViewDetailedMetrics" class="card uptime-card animate-in" style="--delay: 0.15s">
-            <div class="card-header">
-              <h2 class="card-title">Uptime</h2>
-              <div class="uptime-indicator" :class="getUptimeClass(24)"></div>
-            </div>
-            <div class="card-body">
-              <div class="uptime-stats">
-                <div class="uptime-item">
-                  <div class="uptime-label">Last 24h</div>
-                  <div class="uptime-value" :class="getUptimeClass(24)">{{ calculateUptime(24) }}%</div>
-                  <div class="uptime-bar">
-                    <div class="uptime-progress" :style="{ width: calculateUptime(24) + '%' }" :class="getUptimeClass(24)"></div>
-                  </div>
-                </div>
-                <div class="uptime-item">
-                  <div class="uptime-label">Last 7 days</div>
-                  <div class="uptime-value" :class="getUptimeClass(168)">{{ calculateUptime(168) }}%</div>
-                  <div class="uptime-bar">
-                    <div class="uptime-progress" :style="{ width: calculateUptime(168) + '%' }" :class="getUptimeClass(168)"></div>
-                  </div>
-                </div>
-                <div class="uptime-item">
-                  <div class="uptime-label">Last 30 days</div>
-                  <div class="uptime-value" :class="getUptimeClass(720)">{{ calculateUptime(720) }}%</div>
-                  <div class="uptime-bar">
-                    <div class="uptime-progress" :style="{ width: calculateUptime(720) + '%' }" :class="getUptimeClass(720)"></div>
-                  </div>
-                </div>
-                <div class="uptime-item">
-                  <div class="uptime-label">Current Month</div>
-                  <div class="uptime-value" :class="getUptimeClass(0)">{{ calculateMonthlyUptime() }}%</div>
-                  <div class="uptime-bar">
-                    <div class="uptime-progress" :style="{ width: calculateMonthlyUptime() + '%' }" :class="getUptimeClass(0)"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <UptimeCard 
+            v-if="canViewDetailedMetrics" 
+            :uptime-items="uptimeItems"
+          />
           
           <!-- Alerts Card -->
-          <div v-if="canViewDetailedMetrics" class="card alerts-card animate-in" style="--delay: 0.2s">
-            <div class="card-header">
-              <h2 class="card-title">Recent Alerts</h2>
-              <span class="alerts-count" v-if="recentAlerts.length">{{ recentAlerts.length }}</span>
-            </div>
-            <div class="card-body">
-              <div v-if="recentAlerts.length" class="alerts-list">
-                <div v-for="(alert, index) in recentAlerts" 
-                     :key="index" 
-                     class="alert-item animate-in" 
-                     :class="alert.severity"
-                     :style="{ '--delay': 0.25 + index * 0.05 + 's' }">
-                  <div class="alert-content">
-                    <span class="alert-message">{{ alert.message }}</span>
-                    <span class="alert-time">{{ formatAlertTime(alert.timestamp) }}</span>
-                  </div>
-                </div>
-              </div>
-              <div v-else class="no-data">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                  <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15Z" />
-                </svg>
-                <p>No recent alerts</p>
-              </div>
-            </div>
-          </div>
+          <AlertsCard 
+            v-if="canViewDetailedMetrics" 
+            :alerts="recentAlerts"
+          />
           
           <!-- Response Time Chart Card -->
-          <div class="card chart-card full-width animate-in" :class="{ 'limited-data': !canViewDetailedMetrics }" style="--delay: 0.25s">
-            <div class="card-header">
-              <h2 class="card-title">Response Times</h2>
-              <div v-if="canViewDetailedMetrics" class="chart-controls">
-                <button 
-                  v-for="period in chartPeriods" 
-                  :key="period.value" 
-                  :class="['chart-period-button', { active: selectedChartPeriod === period.value }]"
-                  @click="selectedChartPeriod = period.value"
-                >
-                  {{ period.label }}
-                </button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div v-if="!canViewDetailedMetrics" class="limited-access-message">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                  <path fill="currentColor" d="M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8.9,6C8.9,4.29 10.29,2.9 12,2.9C13.71,2.9 15.1,4.29 15.1,6V8H8.9V6M16,16H13V19H11V16H8V14H11V11H13V14H16V16Z" />
-                </svg>
-                <div class="limited-access-content">
-                  <p class="limited-heading">Limited Access</p>
-                  <p>Login with higher privileges to view detailed metrics and historical data.</p>
-                </div>
-              </div>
-              
-              <div v-else class="chart-container">
-                <LineChart 
-                  v-if="chartData.labels.length" 
-                  :chart-data="chartData"
-                  :options="chartOptions"
-                />
-                <div v-else class="no-data">
-                  <svg viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="currentColor" d="M21,21V17.5C21,16.67 20.33,16 19.5,16C18.67,16 18,16.67 18,17.5V21H16V9H14V21H9V2H7V21H3V19H1V21A2,2 0 0,0 3,23H19A2,2 0 0,0 21,21M5,16H7V19H5V16Z" />
-                  </svg>
-                  <p>No data available</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ChartCard 
+            title="Response Times"
+            v-model="selectedChartPeriod"
+            :periods="chartPeriods"
+            :limited="!canViewDetailedMetrics"
+            :has-chart-data="chartData.labels.length > 0"
+            :extra-classes="{ 'limited-data': !canViewDetailedMetrics }"
+          >
+            <LineChart 
+              v-if="chartData.labels.length && canViewDetailedMetrics" 
+              :chart-data="chartData"
+              :options="chartOptions"
+            />
+          </ChartCard>
         </div>
       </transition>
     </div>
     
     <!-- Add Site Modal -->
-    <transition name="modal">
-      <div v-if="showAddSiteModal && canAddSites" class="modal-backdrop" @click.self="showAddSiteModal = false">
-        <div class="modal card">
-          <div class="modal-header">
-            <h3>Add Monitoring Site</h3>
-            <button class="modal-close" @click="showAddSiteModal = false">
-              <svg viewBox="0 0 24 24" width="24" height="24">
-                <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
-              </svg>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="form-group">
-              <label class="form-label" for="site-name">Site Name</label>
-              <div class="input-wrapper">
-                <svg viewBox="0 0 24 24" width="18" height="18" class="input-icon">
-                  <path fill="currentColor" d="M17,13H13V17H11V13H7V11H11V7H13V11H17M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
-                </svg>
-                <input type="text" id="site-name" v-model="newSite.name" placeholder="Production API" class="form-control">
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="site-url">URL to Monitor</label>
-              <div class="input-wrapper">
-                <svg viewBox="0 0 24 24" width="18" height="18" class="input-icon">
-                  <path fill="currentColor" d="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.56,13.34 9.5,12.68 9.5,12C9.5,11.32 9.56,10.65 9.66,10H14.34C14.43,10.65 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,19.96C11.17,18.76 10.5,17.43 10.09,16H13.91C13.5,17.43 12.83,18.76 12,19.96M8,8H5.08C6.03,6.34 7.57,5.06 9.4,4.44C8.8,5.55 8.35,6.75 8,8M5.08,16H8C8.35,17.25 8.8,18.45 9.4,19.56C7.57,18.93 6.03,17.65 5.08,16M4.26,14C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H7.64C7.56,10.66 7.5,11.32 7.5,12C7.5,12.68 7.56,13.34 7.64,14M12,4.03C12.83,5.23 13.5,6.57 13.91,8H10.09C10.5,6.57 11.17,5.23 12,4.03M18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44C16.43,5.07 17.96,6.34 18.92,8M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
-                </svg>
-                <input type="text" id="site-url" v-model="newSite.url" placeholder="https://api.example.com/health" class="form-control">
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="site-id">Site ID (for API)</label>
-              <div class="input-wrapper">
-                <svg viewBox="0 0 24 24" width="18" height="18" class="input-icon">
-                  <path fill="currentColor" d="M6,17C6,15 10,13.9 12,13.9C14,13.9 18,15 18,17V18H6M15,9A3,3 0 0,1 12,12A3,3 0 0,1 9,9A3,3 0 0,1 12,6A3,3 0 0,1 15,9M3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3H5C3.89,3 3,3.9 3,5Z" />
-                </svg>
-                <input type="text" id="site-id" v-model="newSite.id" placeholder="prod-api" class="form-control">
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-outline" @click="showAddSiteModal = false">Cancel</button>
-            <button class="btn btn-primary" @click="addNewSite" :disabled="!isNewSiteValid">Add Site</button>
-          </div>
-        </div>
-      </div>
-    </transition>
+    <AddSiteModal 
+      v-model="showAddSiteModal" 
+      @submit="addNewSite"
+    />
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted, reactive } from 'vue'
 import axios from 'axios'
 import { LineChart } from 'vue-chart-3'
 import { Chart, registerables } from 'chart.js'
 import userStore, { PERMISSIONS } from '../store/userStore'
+
+// Import components
+import StatusCard from '@/components/StatusCard.vue'
+import StatsCard from '@/components/StatsCard.vue'
+import UptimeCard from '@/components/UptimeCard.vue'
+import AlertsCard from '@/components/AlertsCard.vue'
+import ChartCard from '@/components/ChartCard.vue'
+import SiteTabs from '@/components/SiteTabs.vue'
+import AddSiteModal from '@/components/AddSiteModal.vue'
 
 Chart.register(...registerables)
 
 export default {
   name: 'DashboardView',
   components: {
-    LineChart
+    LineChart,
+    StatusCard,
+    StatsCard,
+    UptimeCard,
+    AlertsCard,
+    ChartCard,
+    SiteTabs,
+    AddSiteModal
   },
   setup() {
     const apiUrl = process.env.VUE_APP_API_URL || 'http://localhost:8000'
@@ -354,11 +185,21 @@ export default {
     })
     
     // Multiple site monitoring
-    const monitoredSites = ref([
-      { id: 'main', name: 'Main API', url: 'https://api.example.com' },
-      { id: 'backup', name: 'Backup API', url: 'https://backup-api.example.com' },
-      { id: 'staging', name: 'Staging', url: 'https://staging-api.example.com' }
-    ])
+    const monitoredSites = ref([])
+    
+    // Fetch monitored sites from backend
+    const fetchMonitoredSites = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/sites`)
+        monitoredSites.value = response.data
+      } catch (err) {
+        console.error('Error fetching monitored sites:', err)
+        // Fallback to default values if API fails
+        monitoredSites.value = [
+          { id: 'main', name: 'Main API', url: 'Loading...' }
+        ]
+      }
+    }
     
     // User role permissions
     const canViewDetailedMetrics = computed(() => 
@@ -558,7 +399,7 @@ export default {
     const calculateUptime = (hours) => {
       // This is a placeholder - in a real app, you'd calculate this from actual data
       // For now, just return a random value between 95 and 99.9
-      return (hours + Math.random() * 4.9).toFixed(2)
+      return (95 + Math.random() * 4.9).toFixed(2)
     }
     
     // Calculate monthly uptime
@@ -661,13 +502,9 @@ export default {
     })
     
     // Add new site
-    const addNewSite = () => {
-      if (isNewSiteValid.value) {
-        monitoredSites.value.push({ ...newSite.value })
-        showAddSiteModal.value = false
-        newSite.value = { id: '', name: '', url: '' }
-        selectedSite.value = monitoredSites.value[monitoredSites.value.length - 1].id
-      }
+    const addNewSite = (siteData) => {
+      monitoredSites.value.push({ ...siteData })
+      selectedSite.value = siteData.id
     }
     
     // Mock recent alerts (in a real app, these would come from the API)
@@ -689,19 +526,7 @@ export default {
       }
     ])
     
-    // Format alert time
-    const formatAlertTime = (timestamp) => {
-      const date = new Date(timestamp)
-      const now = new Date()
-      const diffMs = now - date
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-      
-      if (diffHours < 24) {
-        return `${diffHours}h ago`
-      } else {
-        return date.toLocaleDateString()
-      }
-    }
+    // Format alert time - now moved to AlertsCard component
     
     // Check if current user can access the site
     const canViewCurrentSite = computed(() => {
@@ -711,12 +536,7 @@ export default {
     // Get current user from store
     const currentUser = computed(() => userStore.currentUser())
     
-    // Computed property for status badge class
-    const statusBadgeClass = computed(() => {
-      if (currentStatus.value === 'Good') return 'badge-success'
-      if (currentStatus.value === 'Bad') return 'badge-danger'
-      return 'badge-warning'
-    })
+    // Computed property for status badge class - now in StatusCard component
     
     // Refresh stats function for the refresh button
     const refreshStats = async () => {
@@ -730,22 +550,58 @@ export default {
         })
         
         stats.value = statsResponse.data
-        
-        // Add a small animation to show the refresh worked
-        const statItems = document.querySelectorAll('.stat-item')
-        statItems.forEach((item, index) => {
-          item.classList.remove('animate-in')
-          // Force reflow
-          void item.offsetWidth
-          item.style.setProperty('--delay', 0.1 + index * 0.05 + 's')
-          item.classList.add('animate-in')
-        })
       } catch (err) {
         console.error('Error refreshing stats:', err)
       }
     }
     
-    onMounted(() => {
+    // Computed property for stats items for StatsCard
+    const statsItems = computed(() => [
+      {
+        label: 'Total Requests',
+        value: stats.value.total_requests_24h
+      },
+      {
+        label: 'Success Rate',
+        value: `${stats.value.success_rate_24h.toFixed(2)}%`,
+        class: successRateClass.value
+      },
+      {
+        label: 'Avg Response Time',
+        value: `${(stats.value.avg_response_time_24h * 1000).toFixed(2)} ms`,
+        class: responseTimeClass.value
+      },
+      {
+        label: 'Failed Requests',
+        value: stats.value.failed_requests_24h
+      }
+    ])
+    
+    // Computed property for uptime items for UptimeCard
+    const uptimeItems = computed(() => [
+      {
+        label: 'Last 24h',
+        value: calculateUptime(24)
+      },
+      {
+        label: 'Last 7 days',
+        value: calculateUptime(168)
+      },
+      {
+        label: 'Last 30 days',
+        value: calculateUptime(720)
+      },
+      {
+        label: 'Current Month',
+        value: calculateMonthlyUptime()
+      }
+    ])
+    
+    onMounted(async () => {
+      // First fetch site information
+      await fetchMonitoredSites()
+      
+      // Then fetch data for the selected site
       fetchData()
       fetchAllSiteStatuses()
       
@@ -773,7 +629,6 @@ export default {
     return {
       loading,
       error,
-      recentMetrics,
       stats,
       currentStatus,
       lastChecked,
@@ -781,31 +636,25 @@ export default {
       chartOptions,
       monitoredSites: accessibleSites,
       selectedSite,
-      calculateUptime,
       connectionStatus,
       connectionStatusText,
       retryConnection,
       chartPeriods,
       selectedChartPeriod,
-      showAddSiteModal: computed(() => showAddSiteModal.value && canAddSites.value),
-      newSite,
-      isNewSiteValid,
+      showAddSiteModal,
       addNewSite,
       selectedSiteUrl,
       siteStatus,
       recentAlerts,
-      formatAlertTime,
-      getUptimeClass,
-      successRateClass,
-      responseTimeClass,
-      calculateMonthlyUptime,
       canViewDetailedMetrics,
       canAddSites,
       isAdmin,
       canViewCurrentSite,
       currentUser,
-      statusBadgeClass,
-      refreshStats
+      refreshStats,
+      statsItems,
+      uptimeItems,
+      fetchMonitoredSites
     }
   }
 }
@@ -942,21 +791,6 @@ export default {
   color: var(--secondary);
 }
 
-.badge-success {
-  background-color: rgba(34, 197, 94, 0.1);
-  color: var(--success);
-}
-
-.badge-danger {
-  background-color: rgba(255, 0, 110, 0.1);
-  color: var(--danger);
-}
-
-.badge-warning {
-  background-color: rgba(251, 191, 36, 0.1);
-  color: var(--accent);
-}
-
 /* Loading and Error States */
 .loading-container {
   display: flex;
@@ -1037,86 +871,6 @@ export default {
   margin: 0 auto;
 }
 
-/* Site Tabs */
-.site-tabs-container {
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-  border-radius: var(--radius-md);
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-}
-
-.site-tabs {
-  display: flex;
-  gap: 0.25rem;
-  overflow-x: auto;
-  padding: 0.75rem;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.site-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.site-tab {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-}
-
-.site-tab:hover {
-  border-color: var(--primary-light);
-  color: var(--primary);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-
-.site-tab.active {
-  background-color: var(--primary);
-  color: white;
-  border-color: var(--primary);
-  box-shadow: 0 2px 6px rgba(58, 134, 255, 0.3);
-}
-
-.site-status-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-left: 0.25rem;
-}
-
-.status-good {
-  background-color: var(--success);
-  box-shadow: 0 0 5px var(--success);
-}
-
-.status-bad {
-  background-color: var(--danger);
-  box-shadow: 0 0 5px var(--danger);
-}
-
-.add-site-button {
-  background-color: var(--bg-secondary);
-  border: 1px dashed var(--border-color);
-}
-
-.add-icon {
-  fill: currentColor;
-}
-
 /* Dashboard Grid */
 .dashboard-grid {
   display: grid;
@@ -1131,411 +885,7 @@ export default {
   margin: 0 auto;
 }
 
-/* Card Styles */
-.card {
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-card);
-  transition: var(--transition);
-  overflow: hidden;
-}
-
-.card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.card-header {
-  padding: 1.25rem;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.card-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.card-body {
-  padding: 1.25rem;
-}
-
-/* Status Card */
-.status-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.last-checked, .url-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-}
-
-.icon {
-  flex-shrink: 0;
-  color: var(--text-secondary);
-}
-
-.url-value {
-  font-family: monospace;
-  word-break: break-all;
-}
-
-/* Stats Card */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-}
-
-.stat-item {
-  text-align: center;
-  padding: 1rem;
-  border-radius: var(--radius);
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  transition: var(--transition);
-}
-
-.stat-item:hover {
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-primary);
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-}
-
-.refresh-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-/* Uptime Card */
-.uptime-card .card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.uptime-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.uptime-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.uptime-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.uptime-label {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.uptime-value {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.uptime-bar {
-  width: 100%;
-  height: 6px;
-  background-color: var(--gray-light);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.uptime-progress {
-  height: 100%;
-  border-radius: var(--radius-full);
-  transition: width 0.5s ease;
-}
-
-/* Alerts Card */
-.alerts-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background-color: var(--primary);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.alerts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.alert-item {
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius);
-  transition: var(--transition);
-  border-left: 3px solid;
-}
-
-.alert-item:hover {
-  transform: translateX(4px);
-}
-
-.alert-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.alert-message {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.alert-time {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.alert-item.info {
-  background-color: rgba(58, 134, 255, 0.05);
-  border-left-color: var(--primary);
-}
-
-.alert-item.warning {
-  background-color: rgba(251, 191, 36, 0.05);
-  border-left-color: var(--accent);
-}
-
-.alert-item.critical {
-  background-color: rgba(255, 0, 110, 0.05);
-  border-left-color: var(--danger);
-}
-
-/* Chart Card */
-.chart-card.full-width {
-  grid-column: 1 / -1;
-}
-
-.chart-controls {
-  display: flex;
-  gap: 0.5rem;
-  background-color: var(--bg-primary);
-  border-radius: var(--radius);
-  padding: 0.25rem;
-  border: 1px solid var(--border-color);
-}
-
-.chart-period-button {
-  padding: 0.375rem 0.75rem;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.chart-period-button:hover {
-  color: var(--primary);
-  background-color: rgba(58, 134, 255, 0.05);
-}
-
-.chart-period-button.active {
-  color: var(--primary);
-  background-color: rgba(58, 134, 255, 0.1);
-}
-
-.chart-container {
-  height: 350px;
-  position: relative;
-}
-
-.limited-access-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 2rem;
-  color: var(--text-secondary);
-  height: 100%;
-}
-
-.limited-access-message svg {
-  color: var(--text-secondary);
-  opacity: 0.5;
-}
-
-.limited-access-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.limited-heading {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 1rem;
-}
-
-.no-data {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  color: var(--text-secondary);
-  height: 100%;
-  opacity: 0.7;
-}
-
-/* Modal Styles */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(2px);
-}
-
-.modal {
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 1.25rem;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.modal-header h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-secondary);
-  padding: 0.25rem;
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-}
-
-.modal-close:hover {
-  color: var(--danger);
-  background-color: rgba(255, 0, 110, 0.05);
-}
-
-.modal-body {
-  padding: 1.25rem;
-  overflow-y: auto;
-}
-
-.modal-footer {
-  padding: 1.25rem;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
-.input-wrapper {
-  position: relative;
-}
-
-.input-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-}
-
-/* Status Indicator Colors */
-.good, .excellent {
-  color: var(--success);
-}
-
-.warning, .average {
-  color: var(--accent);
-}
-
-.critical, .poor {
-  color: var(--danger);
-}
-
 /* Animations */
-.animate-in {
-  animation: fadeIn 0.5s ease forwards;
-  opacity: 0;
-  transform: translateY(10px);
-  animation-delay: var(--delay, 0s);
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Transitions */
 .fade-up-enter-active,
 .fade-up-leave-active {
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -1545,32 +895,6 @@ export default {
 .fade-up-leave-to {
   opacity: 0;
   transform: translateY(10px);
-}
-
-.pulse-enter-active,
-.pulse-leave-active {
-  transition: all 0.3s ease;
-}
-
-.pulse-enter-from,
-.pulse-leave-to {
-  transform: scale(0);
-  opacity: 0;
-}
-
-.modal-enter-active,
-.modal-leave-active {
-  transition: all 0.3s ease;
-}
-
-.modal-enter-from {
-  opacity: 0;
-  transform: scale(0.9);
-}
-
-.modal-leave-to {
-  opacity: 0;
-  transform: scale(0.9);
 }
 
 /* Responsive Design */
@@ -1590,33 +914,11 @@ export default {
   .connection-status, .user-profile {
     width: 100%;
   }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .chart-controls {
-    flex-wrap: wrap;
-  }
-  
-  .site-tabs {
-    flex-wrap: nowrap;
-  }
 }
 
 @media (max-width: 480px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
-  }
-  
-  .card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-  
-  .modal {
-    width: 95%;
   }
 }
 </style> 

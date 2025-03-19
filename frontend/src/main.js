@@ -5,6 +5,9 @@ import { Chart, registerables } from 'chart.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import axios from 'axios'
 
+// Import shared styles
+import './assets/css/shared-styles.css'
+
 // Register Chart.js components
 Chart.register(...registerables)
 
@@ -14,7 +17,7 @@ axios.defaults.baseURL = ''
 
 // Add a request interceptor to include the auth token in all requests
 axios.interceptors.request.use(config => {
-  const token = localStorage.getItem('auth_token')
+  const token = localStorage.getItem('token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }

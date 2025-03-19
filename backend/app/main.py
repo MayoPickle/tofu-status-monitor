@@ -226,6 +226,18 @@ def get_status(db: Session = Depends(get_db)):
             
     return result
 
+@app.get("/sites", tags=["sites"])
+def get_monitored_sites():
+    """Get all monitored sites information"""
+    result = []
+    for site_id, url in MONITORED_SITES.items():
+        result.append({
+            "id": site_id,
+            "name": site_id.capitalize(),
+            "url": url
+        })
+    return result
+
 @app.get("/metrics/stats")
 def get_stats(site_id: str = "main", db: Session = Depends(get_db)):
     """Get statistics about the monitored endpoint"""
