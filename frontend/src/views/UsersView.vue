@@ -48,16 +48,32 @@
         </div>
       </div>
       
-      <!-- Users Grid -->
-      <div class="users-grid">
-        <div v-for="user in filteredUsers" :key="user.id" class="user-card">
-          <div class="user-card-header">
-            <div class="user-avatar">{{ getUserInitials(user.name || user.username) }}</div>
-            <div class="user-info">
-              <h3 class="user-name">{{ user.name || user.username }}</h3>
-              <span class="role-badge" :class="user.role">{{ user.role }}</span>
+      <!-- Error Message -->
+      <div v-if="error" class="error-message">
+        <svg viewBox="0 0 24 24" class="error-icon">
+          <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
+        </svg>
+        <span>{{ error }}</span>
+      </div>
+      
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <span>Loading users...</span>
+      </div>
+      
+      <!-- Mobile Card View (now used for all screen sizes) -->
+      <div v-else class="mobile-cards">
+        <div v-for="user in filteredUsers" :key="user.id" class="mobile-user-card">
+          <div class="mobile-card-header">
+            <div class="mobile-user-info">
+              <div class="user-avatar">{{ getUserInitials(user.name || user.username) }}</div>
+              <div>
+                <h3 class="mobile-user-name">{{ user.name || user.username }}</h3>
+                <span class="role-badge" :class="user.role">{{ user.role }}</span>
+              </div>
             </div>
-            <div class="card-actions">
+            <div class="mobile-actions">
               <button class="action-button edit" @click="editUser(user)" title="Edit User">
                 <svg viewBox="0 0 24 24">
                   <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" />
@@ -70,28 +86,18 @@
               </button>
             </div>
           </div>
-          
-          <div class="user-card-body">
-            <div class="detail-item">
-              <svg viewBox="0 0 24 24" class="detail-icon">
-                <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
-              </svg>
-              <span>{{ user.username }}</span>
+          <div class="mobile-card-body">
+            <div class="mobile-detail-item">
+              <span class="mobile-label">Username:</span>
+              <span class="mobile-value">{{ user.username }}</span>
             </div>
-            <div class="detail-item">
-              <svg viewBox="0 0 24 24" class="detail-icon">
-                <path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z" />
-              </svg>
-              <span>{{ user.email }}</span>
+            <div class="mobile-detail-item">
+              <span class="mobile-label">Email:</span>
+              <span class="mobile-value">{{ user.email }}</span>
             </div>
-            <div class="assigned-sites">
-              <div class="sites-header">
-                <svg viewBox="0 0 24 24" class="detail-icon">
-                  <path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" />
-                </svg>
-                <span>Assigned Sites</span>
-              </div>
-              <div class="site-badges">
+            <div class="mobile-detail-item">
+              <span class="mobile-label">Sites:</span>
+              <div class="mobile-site-badges">
                 <span v-for="siteId in user.assignedSites" 
                       :key="siteId" 
                       class="site-badge">
@@ -226,12 +232,17 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import userStore, { ROLES } from '../store/userStore'
+import axios from 'axios'
 
 export default {
   name: 'UsersView',
   setup() {
     // User state
     const users = ref([])
+    
+    // Error and loading states
+    const loading = ref(false)
+    const error = ref(null)
     
     // Admin check
     const isAdmin = computed(() => userStore.isAdmin())
@@ -275,9 +286,22 @@ export default {
       loadUsers()
     })
     
-    // Load users from the store
-    const loadUsers = () => {
-      users.value = userStore.getUserList()
+    // Load users from the API
+    const loadUsers = async () => {
+      if (!isAdmin.value) return
+      
+      loading.value = true
+      error.value = null
+      
+      try {
+        const response = await axios.get('/users')
+        users.value = response.data
+      } catch (err) {
+        console.error('Failed to load users:', err)
+        error.value = err.response?.data?.detail || 'Failed to load users'
+      } finally {
+        loading.value = false
+      }
     }
     
     // Get site name by ID
@@ -329,38 +353,60 @@ export default {
     }
     
     // Save user (add or update)
-    const saveUser = () => {
-      if (showEditUserModal.value) {
-        // Update existing user
-        const updateData = { ...formData.value }
-        if (!updateData.password) {
-          delete updateData.password // Don't update password if blank
+    const saveUser = async () => {
+      try {
+        if (showEditUserModal.value) {
+          // Update existing user
+          const updateData = { ...formData.value }
+          if (!updateData.password) {
+            delete updateData.password // Don't update password if blank
+          }
+          // Remove username from update data as it shouldn't be changed
+          delete updateData.username
+          
+          await axios.put(`/users/${updateData.id}`, updateData)
+        } else {
+          // Add new user
+          await axios.post('/register', formData.value)
         }
-        userStore.updateUser(updateData.id, updateData)
-      } else {
-        // Add new user
-        userStore.addUser(formData.value)
+        
+        await loadUsers()
+        closeModals()
+      } catch (err) {
+        console.error('Failed to save user:', err)
+        error.value = err.response?.data?.detail || 'Failed to save user'
       }
-      
-      loadUsers()
-      closeModals()
     }
     
     // Save site assignments
-    const saveSiteAssignments = () => {
+    const saveSiteAssignments = async () => {
       if (selectedUser.value) {
-        userStore.assignSitesToUser(selectedUser.value.id, assignedSites.value)
-        loadUsers()
-        closeModals()
+        try {
+          const updateData = {
+            assignedSites: assignedSites.value
+          }
+          
+          await axios.put(`/users/${selectedUser.value.id}`, updateData)
+          await loadUsers()
+          closeModals()
+        } catch (err) {
+          console.error('Failed to assign sites:', err)
+          error.value = err.response?.data?.detail || 'Failed to assign sites'
+        }
       }
     }
     
     // Confirm user deletion
-    const confirmDeleteUser = () => {
+    const confirmDeleteUser = async () => {
       if (selectedUser.value) {
-        userStore.deleteUser(selectedUser.value.id)
-        loadUsers()
-        closeModals()
+        try {
+          await axios.delete(`/users/${selectedUser.value.id}`)
+          await loadUsers()
+          closeModals()
+        } catch (err) {
+          console.error('Failed to delete user:', err)
+          error.value = err.response?.data?.detail || 'Failed to delete user'
+        }
       }
     }
     
@@ -371,6 +417,7 @@ export default {
       showAssignSitesModal.value = false
       showDeleteModal.value = false
       selectedUser.value = null
+      error.value = null
     }
     
     // Form validation
@@ -424,6 +471,8 @@ export default {
       searchQuery,
       roleFilter,
       filteredUsers,
+      loading,
+      error,
       getUserInitials,
       getSiteName,
       showAddUser,
@@ -566,41 +615,57 @@ export default {
   box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.1);
 }
 
-.users-grid {
+/* New Table Styles */
+.users-table-container {
+  display: none; /* Always hidden now */
+}
+
+.mobile-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 1.5rem;
-  margin: 0 -0.75rem;
-  padding: 0.75rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
 }
 
-.user-card {
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  transition: all 0.3s ease;
-  border: 1px solid var(--border-color);
+@media (min-width: 768px) {
+  .mobile-cards {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
 }
 
-.user-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--primary);
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
 }
 
-.user-card-header {
+.users-table th {
+  padding: 1.25rem 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--bg-body);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.users-table td {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.users-table tbody tr:hover {
+  background-color: var(--bg-hover);
+}
+
+.user-cell {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1.5rem;
-  background-color: var(--bg-body);
-  border-bottom: 1px solid var(--border-color);
 }
 
 .user-avatar {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -608,20 +673,21 @@ export default {
   color: white;
   border-radius: 50%;
   font-weight: 600;
-  font-size: 1.25rem;
-  box-shadow: 0 2px 4px rgba(42, 157, 143, 0.2);
-}
-
-.user-info {
-  flex: 1;
-  min-width: 0;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .user-name {
-  font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 0.375rem;
+}
+
+.email-cell {
+  max-width: 180px;
+}
+
+.email-text {
+  display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -658,15 +724,31 @@ export default {
   color: var(--gray);
 }
 
-.card-actions {
+.site-badges-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 250px;
+}
+
+.site-badge {
+  padding: 0.25rem 0.5rem;
+  background-color: var(--bg-body);
+  border: 1px solid var(--border-color);
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.actions-cell {
   display: flex;
   gap: 0.5rem;
-  margin-left: auto;
-  padding-left: 1rem;
+  white-space: nowrap;
 }
 
 .action-button {
-  padding: 0.625rem;
+  padding: 0.5rem;
   border: none;
   border-radius: var(--radius);
   background-color: transparent;
@@ -691,85 +773,89 @@ export default {
   color: var(--danger);
 }
 
-.user-card-body {
-  padding: 1.5rem;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 0.75rem 0;
-  color: var(--text-secondary);
-  font-size: 0.9375rem;
-}
-
-.detail-item:not(:last-child) {
-  border-bottom: 1px dashed var(--border-color);
-}
-
-.detail-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  fill: currentColor;
-  flex-shrink: 0;
-}
-
-.detail-item span {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
+/* Mobile Card Styles */
+.mobile-user-card {
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   overflow: hidden;
-  text-overflow: ellipsis;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
 }
 
-.assigned-sites {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
+.mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--bg-body);
+  border-bottom: 1px solid var(--border-color);
 }
 
-.sites-header {
+.mobile-user-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  font-size: 0.9375rem;
 }
 
-.site-badges {
+.mobile-user-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.mobile-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.mobile-card-body {
+  padding: 1rem;
+}
+
+.mobile-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0;
+}
+
+.mobile-detail-item:not(:last-child) {
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.mobile-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.mobile-value {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.mobile-site-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-.site-badge {
-  padding: 0.375rem 0.75rem;
-  background-color: var(--bg-body);
-  border: 1px solid var(--border-color);
-  border-radius: 2rem;
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-}
-
-.site-badge:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  margin-top: 0.5rem;
 }
 
 .assign-sites-button {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
   background-color: transparent;
   border: 1px dashed var(--primary);
   border-radius: 2rem;
   color: var(--primary);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -781,8 +867,8 @@ export default {
 }
 
 .assign-sites-button .button-icon {
-  width: 1rem;
-  height: 1rem;
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .access-denied {
@@ -1029,6 +1115,48 @@ export default {
   font-weight: 500;
 }
 
+/* Loading and Error Styles */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid rgba(42, 157, 143, 0.1);
+  border-left-color: var(--primary);
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: rgba(231, 111, 81, 0.1);
+  border-left: 4px solid var(--danger);
+  color: var(--danger);
+  border-radius: var(--radius);
+  margin-bottom: 2rem;
+}
+
+.error-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: currentColor;
+}
+
 @media (max-width: 768px) {
   .users-container {
     padding: 1rem;
@@ -1050,49 +1178,19 @@ export default {
     padding: 1rem;
   }
   
-  .users-grid {
-    grid-template-columns: 1fr;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .user-card-header {
-    padding: 1rem;
-  }
-  
-  .user-card-body {
-    padding: 1rem;
-  }
-  
-  .modal {
-    margin: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-header {
-    padding-bottom: 1rem;
-  }
-  
   .add-user-button {
     width: 100%;
     justify-content: center;
   }
   
-  .user-avatar {
-    width: 3rem;
-    height: 3rem;
-    font-size: 1rem;
+  .mobile-user-info {
+    flex: 1;
+    min-width: 0;
   }
   
-  .modal-header,
-  .modal-body,
-  .modal-footer {
-    padding: 1rem;
-  }
-  
-  .site-checkbox-list {
-    grid-template-columns: 1fr;
+  .mobile-user-name {
+    white-space: normal;
+    word-break: break-word;
   }
 }
 </style> 

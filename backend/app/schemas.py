@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
 class RequestMetricBase(BaseModel):
+    site_id: str = "main"
     endpoint: str
     request_time: float
     status_code: int
@@ -18,6 +19,7 @@ class RequestMetric(RequestMetricBase):
         orm_mode = True
 
 class WeeklyAverageBase(BaseModel):
+    site_id: str = "main"
     endpoint: str
     average_time: float
     week_start: datetime
@@ -26,6 +28,20 @@ class WeeklyAverageBase(BaseModel):
 class WeeklyAverage(WeeklyAverageBase):
     id: int
 
+    class Config:
+        orm_mode = True
+
+class SiteStatusBase(BaseModel):
+    site_id: str
+    status: str
+    
+class SiteStatusCreate(SiteStatusBase):
+    pass
+
+class SiteStatus(SiteStatusBase):
+    id: int
+    last_updated: datetime
+    
     class Config:
         orm_mode = True
 

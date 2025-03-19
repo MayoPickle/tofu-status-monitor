@@ -4,7 +4,7 @@ module.exports = defineConfig({
   transpileDependencies: true,
   devServer: {
     host: '0.0.0.0',
-    port: 8083,
+    port: 8080,
     proxy: {
       '^/': {
         target: 'http://localhost:8000',
@@ -30,7 +30,7 @@ module.exports = defineConfig({
       entry: 'src/main.js',
       template: 'public/index.html',
       filename: 'index.html',
-      title: 'Tofu Monitor'
+      title: 'Kepler Monitor'
     }
   },
   chainWebpack: config => {
