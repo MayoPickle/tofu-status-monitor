@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from . import models, schemas, database
 from .database import engine, get_db
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import List, Dict
 import jwt
 from jwt.exceptions import PyJWTError
@@ -41,7 +41,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # Helper functions
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
