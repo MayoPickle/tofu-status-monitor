@@ -2,7 +2,7 @@ import { reactive, readonly } from 'vue'
 import axios from 'axios'
 
 // API base URL
-const API_URL = ''  // 不使用/api前缀，直接让代理处理
+const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8000'
 
 // User roles
 export const ROLES = {
@@ -12,87 +12,95 @@ export const ROLES = {
   GUEST: 'guest'
 }
 
-// Permission definitions
+// 全局功能权限
 export const PERMISSIONS = {
-  VIEW_DASHBOARD: 'view_dashboard',
-  VIEW_OVERALL_STATUS: 'view_overall_status',
-  VIEW_DETAILED_METRICS: 'view_detailed_metrics',
-  ADD_SITES: 'add_sites',
-  EDIT_SITES: 'edit_sites',
-  DELETE_SITES: 'delete_sites',
-  MANAGE_USERS: 'manage_users',
-  ASSIGN_SITES: 'assign_sites'
+  // 视图权限
+  VIEW_DASHBOARD: 'view_dashboard',        // 查看仪表板
+  VIEW_OVERALL_STATUS: 'view_overall_status', // 查看整体状态
+  VIEW_DETAILED_METRICS: 'view_detailed_metrics', // 查看详细指标
+  VIEW_ALERTS: 'view_alerts',              // 查看警报
+  
+  // 管理权限
+  MANAGE_USERS: 'manage_users',            // 管理用户
+  MANAGE_SYSTEM: 'manage_system',          // 管理系统配置
 }
 
-// Role-based permissions
-const rolePermissions = {
+// 站点特定权限
+export const SITE_PERMISSIONS = {
+  SITE_VIEW: 'site_view',                  // 查看站点基本状态
+  SITE_VIEW_METRICS: 'site_view_metrics',  // 查看站点详细指标
+  SITE_CONFIGURE: 'site_configure',        // 配置站点
+  SITE_ADD: 'site_add',                    // 添加站点
+  SITE_EDIT: 'site_edit',                  // 编辑站点
+  SITE_DELETE: 'site_delete',              // 删除站点
+}
+
+// 数据访问权限
+export const DATA_PERMISSIONS = {
+  ACCESS_REALTIME: 'access_realtime',      // 访问实时数据
+  ACCESS_HISTORICAL: 'access_historical',  // 访问历史数据
+  ACCESS_UPTIME: 'access_uptime',          // 访问正常运行时间数据
+  EXPORT_DATA: 'export_data',              // 导出数据
+}
+
+// 基于角色的全局权限映射
+const roleGlobalPermissions = {
   [ROLES.ADMIN]: [
-    PERMISSIONS.VIEW_DASHBOARD,
-    PERMISSIONS.VIEW_OVERALL_STATUS,
-    PERMISSIONS.VIEW_DETAILED_METRICS,
-    PERMISSIONS.ADD_SITES,
-    PERMISSIONS.EDIT_SITES,
-    PERMISSIONS.DELETE_SITES,
-    PERMISSIONS.MANAGE_USERS,
-    PERMISSIONS.ASSIGN_SITES
+    // 所有全局权限
+    ...Object.values(PERMISSIONS),
+    // 所有数据权限
+    ...Object.values(DATA_PERMISSIONS)
   ],
   [ROLES.MAINTAINER]: [
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_OVERALL_STATUS,
     PERMISSIONS.VIEW_DETAILED_METRICS,
-    PERMISSIONS.ADD_SITES,
-    PERMISSIONS.EDIT_SITES
+    PERMISSIONS.VIEW_ALERTS,
+    DATA_PERMISSIONS.ACCESS_REALTIME,
+    DATA_PERMISSIONS.ACCESS_HISTORICAL,
+    DATA_PERMISSIONS.ACCESS_UPTIME,
   ],
   [ROLES.USER]: [
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_OVERALL_STATUS,
-    PERMISSIONS.VIEW_DETAILED_METRICS
+    PERMISSIONS.VIEW_DETAILED_METRICS,
+    DATA_PERMISSIONS.ACCESS_REALTIME,
+    DATA_PERMISSIONS.ACCESS_UPTIME,
   ],
   [ROLES.GUEST]: [
     PERMISSIONS.VIEW_DASHBOARD,
-    PERMISSIONS.VIEW_OVERALL_STATUS
+    PERMISSIONS.VIEW_OVERALL_STATUS,
+    DATA_PERMISSIONS.ACCESS_REALTIME,
   ]
 }
 
-// Mock users for demo purposes
-const mockUsers = [
-  {
-    id: 1,
-    username: 'admin',
-    password: 'admin123',
-    name: 'Admin User',
-    email: 'admin@example.com',
-    role: ROLES.ADMIN,
-    assignedSites: ['main', 'backup', 'staging']
-  },
-  {
-    id: 2,
-    username: 'maintainer',
-    password: 'maintain123',
-    name: 'Maintenance Staff',
-    email: 'maintainer@example.com',
-    role: ROLES.MAINTAINER,
-    assignedSites: ['main', 'backup', 'staging']
-  },
-  {
-    id: 3,
-    username: 'user',
-    password: 'user123',
-    name: 'Regular User',
-    email: 'user@example.com',
-    role: ROLES.USER,
-    assignedSites: ['main']
-  }
-]
+// 基于角色的默认站点权限 - 仅用于创建新用户时的初始化
+const roleDefaultSitePermissions = {
+  [ROLES.ADMIN]: [
+    ...Object.values(SITE_PERMISSIONS)
+  ],
+  [ROLES.MAINTAINER]: [
+    SITE_PERMISSIONS.SITE_VIEW,
+    SITE_PERMISSIONS.SITE_VIEW_METRICS,
+    SITE_PERMISSIONS.SITE_CONFIGURE,
+    SITE_PERMISSIONS.SITE_EDIT
+  ],
+  [ROLES.USER]: [
+    SITE_PERMISSIONS.SITE_VIEW,
+    SITE_PERMISSIONS.SITE_VIEW_METRICS
+  ],
+  [ROLES.GUEST]: [
+    SITE_PERMISSIONS.SITE_VIEW
+  ]
+}
 
-// Create the store state
+// 创建最小状态，只保存当前用户和认证信息
 const state = reactive({
   currentUser: null,
   isAuthenticated: false,
   accessToken: null,
   loading: false,
-  error: null,
-  users: mockUsers
+  error: null
 })
 
 // HTTP client setup
@@ -105,67 +113,90 @@ const api = axios.create({
   timeout: 10000 // 10 seconds timeout
 })
 
-// Add request interceptor for debugging
+// Add request interceptor for authorization
 api.interceptors.request.use(config => {
-  console.log('Making request to:', config.url, {
-    method: config.method,
-    data: config.data,
-    headers: config.headers
-  })
+  // Add authorization header if we have a token
+  if (state.accessToken) {
+    config.headers.Authorization = `Bearer ${state.accessToken}`
+  }
   return config
 })
-
-// Add response interceptor for debugging
-api.interceptors.response.use(
-  response => {
-    console.log('Received response:', {
-      status: response.status,
-      data: response.data
-    })
-    return response
-  },
-  error => {
-    console.error('API Error:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    })
-    throw error
-  }
-)
 
 // Getter methods
 const getters = {
   isAuthenticated: () => state.isAuthenticated,
   currentUser: () => state.currentUser,
+  
+  // 检查全局权限
   hasPermission: (permission) => {
     if (!state.currentUser) {
       return false
     }
     
     const userRole = state.currentUser.role
-    return rolePermissions[userRole]?.includes(permission) || false
+    return roleGlobalPermissions[userRole]?.includes(permission) || false
   },
-  isAdmin: () => state.currentUser?.role === ROLES.ADMIN,
-  isMaintainer: () => state.currentUser?.role === ROLES.MAINTAINER,
-  isUser: () => state.currentUser?.role === ROLES.USER,
-  isGuest: () => !state.isAuthenticated || state.currentUser?.role === ROLES.GUEST,
+  
+  // 检查数据访问权限
+  hasDataPermission: (permission) => {
+    if (!state.currentUser) {
+      return false
+    }
+    
+    const userRole = state.currentUser.role
+    return roleGlobalPermissions[userRole]?.includes(permission) || false
+  },
+  
+  // 检查站点权限
+  hasSitePermission: (siteId, permission) => {
+    if (!state.currentUser) {
+      return false
+    }
+    
+    // 管理员拥有所有站点的所有权限
+    if (state.currentUser.role === ROLES.ADMIN) {
+      return true
+    }
+    
+    // 检查用户特定站点权限
+    return state.currentUser.sitePermissions?.[siteId]?.includes(permission) || false
+  },
+  
+  // 获取用户可访问的站点列表 (同步方法)
+  getAccessibleSites: () => {
+    if (!state.currentUser) {
+      return ['main'] // 返回默认站点，确保至少有一个站点可访问
+    }
+    
+    // 管理员和维护人员可以访问所有站点
+    if (state.currentUser.role === ROLES.ADMIN || state.currentUser.role === ROLES.MAINTAINER) {
+      return ['main', 'backup', 'staging'] // 返回所有已知站点
+    }
+    
+    // 其他用户只能访问有权限的站点
+    const userSites = Object.keys(state.currentUser.sitePermissions || {})
+    return userSites.length > 0 ? userSites : ['main'] // 确保至少有一个站点
+  },
+  
+  // 检查是否可以访问特定站点
   canAccessSite: (siteId) => {
     if (!state.currentUser) {
       return false
     }
     
-    // Admins and maintainers can access all sites
+    // 管理员和维护人员可以访问所有站点
     if (state.currentUser.role === ROLES.ADMIN || state.currentUser.role === ROLES.MAINTAINER) {
       return true
     }
     
-    // Users can only access assigned sites
-    // Check if assignedSites exists before trying to use includes
-    return state.currentUser.assignedSites && state.currentUser.assignedSites.includes(siteId)
+    // 其他用户检查站点权限
+    return !!state.currentUser.sitePermissions?.[siteId]
   },
-  getUserList: () => state.users,
-  getUserById: (userId) => state.users.find(user => user.id === userId)
+  
+  isAdmin: () => state.currentUser?.role === ROLES.ADMIN,
+  isMaintainer: () => state.currentUser?.role === ROLES.MAINTAINER,
+  isUser: () => state.currentUser?.role === ROLES.USER,
+  isGuest: () => !state.isAuthenticated || state.currentUser?.role === ROLES.GUEST
 }
 
 // Actions
@@ -174,14 +205,11 @@ const actions = {
   register: async (userData) => {
     state.loading = true
     state.error = null
-    console.log('Registering user with data:', userData)
     
     try {
       const response = await api.post('/register', userData)
-      console.log('Registration successful:', response.data)
       return response.data
     } catch (error) {
-      console.error('Registration failed:', error)
       state.error = error.response?.data?.detail || 'Registration failed'
       throw new Error(state.error)
     } finally {
@@ -200,7 +228,6 @@ const actions = {
       formData.append('username', username)
       formData.append('password', password)
       
-      console.log('Login: Sending token request to:', `${API_URL}/token`)
       const tokenResponse = await api.post('/token', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -209,19 +236,16 @@ const actions = {
       state.accessToken = tokenResponse.data.access_token
       
       // Get user data
-      console.log('Login: Getting user data from:', `${API_URL}/users/me`)
       api.defaults.headers.common['Authorization'] = `Bearer ${state.accessToken}`
       const userResponse = await api.get('/users/me')
       state.currentUser = userResponse.data
       state.isAuthenticated = true
       
-      // Store in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify(state.currentUser))
+      // Store token in localStorage for persistence (only token, not user data)
       localStorage.setItem('token', state.accessToken)
       
       return state.currentUser
     } catch (error) {
-      console.error('Login error details:', error)
       state.error = error.response?.data?.detail || 'Login failed'
       throw new Error(state.error)
     } finally {
@@ -231,108 +255,122 @@ const actions = {
   
   // Logout action
   logout: () => {
-    state.currentUser = { 
-      role: ROLES.GUEST,
-      assignedSites: []
-    }
+    state.currentUser = null
     state.isAuthenticated = false
     state.accessToken = null
     
     // Clear localStorage
-    localStorage.removeItem('user')
     localStorage.removeItem('token')
+    
+    // Remove Authorization header
+    delete api.defaults.headers.common['Authorization']
   },
   
   // Check if user is already logged in from localStorage
-  initAuth: () => {
-    const storedUser = localStorage.getItem('user')
+  initAuth: async () => {
     const storedToken = localStorage.getItem('token')
     
-    if (storedUser && storedToken) {
-      state.currentUser = JSON.parse(storedUser)
-      state.isAuthenticated = true
-      state.accessToken = storedToken
-    } else {
-      // Set guest user if no stored credentials
-      state.currentUser = { 
-        role: ROLES.GUEST,
-        assignedSites: [] // Initialize with empty array
+    if (storedToken) {
+      try {
+        state.accessToken = storedToken
+        api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
+        
+        // Fetch current user with the token
+        const userResponse = await api.get('/users/me')
+        state.currentUser = userResponse.data
+        state.isAuthenticated = true
+      } catch (error) {
+        console.error('Failed to authenticate with stored token:', error)
+        actions.logout() // Clear invalid token
       }
-      state.isAuthenticated = false
     }
   },
   
-  // For admin: add a new user
-  addUser: (user) => {
-    if (!getters.isAdmin()) {
-      throw new Error('Only admins can add users')
-    }
-    
-    // Generate a new id
-    const newId = Math.max(...state.users.map(u => u.id)) + 1
-    
-    // Add new user to the list
-    state.users.push({
-      ...user,
-      id: newId
-    })
-  },
+  // API Functions for User Management
+  // These functions directly call the API without local caching
   
-  // For admin: update a user
-  updateUser: (userId, userData) => {
-    if (!getters.isAdmin()) {
-      throw new Error('Only admins can update users')
+  // Get all users (admin only)
+  getAllUsers: async () => {
+    if (!state.isAuthenticated || !state.accessToken) {
+      console.warn('Not authenticated, cannot get users list')
+      return [] // 返回空数组而不是抛出错误
     }
     
-    const userIndex = state.users.findIndex(u => u.id === userId)
-    
-    if (userIndex === -1) {
-      throw new Error('User not found')
-    }
-    
-    // Update user data
-    state.users[userIndex] = {
-      ...state.users[userIndex],
-      ...userData
+    try {
+      // 确保请求头中包含授权信息
+      const response = await api.get('/users', {
+        headers: {
+          'Authorization': `Bearer ${state.accessToken}`
+        }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to get users:', error)
+      // 不抛出错误，返回空数组
+      return []
     }
   },
   
-  // For admin: delete a user
-  deleteUser: (userId) => {
-    if (!getters.isAdmin()) {
-      throw new Error('Only admins can delete users')
+  // Add a new user (admin only)
+  addUser: async (userData) => {
+    try {
+      const response = await api.post('/register', userData)
+      return response.data
+    } catch (error) {
+      console.error('Failed to add user:', error)
+      throw new Error(error.response?.data?.detail || 'Failed to add user')
     }
-    
-    const userIndex = state.users.findIndex(u => u.id === userId)
-    
-    if (userIndex === -1) {
-      throw new Error('User not found')
-    }
-    
-    // Remove user
-    state.users.splice(userIndex, 1)
   },
   
-  // For admin: assign sites to a user
-  assignSitesToUser: (userId, siteIds) => {
-    if (!getters.isAdmin()) {
-      throw new Error('Only admins can assign sites')
+  // Update a user (admin only)
+  updateUser: async (userId, userData) => {
+    try {
+      const response = await api.put(`/users/${userId}`, userData)
+      return response.data
+    } catch (error) {
+      console.error('Failed to update user:', error)
+      throw new Error(error.response?.data?.detail || 'Failed to update user')
     }
-    
-    const userIndex = state.users.findIndex(u => u.id === userId)
-    
-    if (userIndex === -1) {
-      throw new Error('User not found')
+  },
+  
+  // Delete a user (admin only)
+  deleteUser: async (userId) => {
+    try {
+      await api.delete(`/users/${userId}`)
+      return true
+    } catch (error) {
+      console.error('Failed to delete user:', error)
+      throw new Error(error.response?.data?.detail || 'Failed to delete user')
     }
-    
-    // Update assigned sites
-    state.users[userIndex].assignedSites = siteIds
-    
-    // If updating the current user, also update the currentUser state
-    if (state.currentUser && state.currentUser.id === userId) {
-      state.currentUser.assignedSites = siteIds
-      localStorage.setItem('user', JSON.stringify(state.currentUser))
+  },
+  
+  // Update a user's permissions (admin only)
+  updateUserPermissions: async (userId, permissions) => {
+    try {
+      const response = await api.put(`/users/${userId}/permissions`, {
+        sitePermissions: permissions
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to update permissions:', error)
+      throw new Error(error.response?.data?.detail || 'Failed to update permissions')
     }
+  },
+  
+  // Migrate user permissions (admin only)
+  migrateUserPermissions: async () => {
+    try {
+      const response = await api.post('/admin/migrate-user-permissions')
+      return response.data
+    } catch (error) {
+      console.error('Failed to migrate permissions:', error)
+      throw new Error(error.response?.data?.detail || 'Failed to migrate permissions')
+    }
+  },
+  
+  // Get default site permissions for a role (helper function)
+  getDefaultSitePermissions: (role) => {
+    return roleDefaultSitePermissions[role] || [SITE_PERMISSIONS.SITE_VIEW]
   }
 }
 

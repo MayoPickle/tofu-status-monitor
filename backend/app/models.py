@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, Float, DateTime, String, ARRAY
 from sqlalchemy.sql import func
 from .database import Base
 import bcrypt
+from sqlalchemy.dialects.postgresql import JSONB
 
 class RequestMetric(Base):
     __tablename__ = "request_metrics"
@@ -42,6 +43,7 @@ class User(Base):
     hashed_password = Column(String)
     role = Column(String, default="user")  # admin, maintainer, user, guest
     assigned_sites = Column(ARRAY(String), default=[])
+    site_permissions = Column(JSONB, default={})  # New field for storing site permissions
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 

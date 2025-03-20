@@ -175,6 +175,65 @@ def delete_user(
     db.commit()
     return None
 
+@app.put("/users/{user_id}/permissions", response_model=schemas.UserResponse)
+def update_user_permissions(
+    user_id: int, 
+    permissions: schemas.SitePermissionsUpdate, 
+    current_user: models.User = Depends(get_admin_user), 
+    db: Session = Depends(get_db)
+):
+    """Update a user's site permissions - admin only endpoint"""
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update the site_permissions field
+    db_user.site_permissions = permissions.sitePermissions
+    
+    # For backward compatibility, also update the assigned_sites field
+    db_user.assigned_sites = list(permissions.sitePermissions.keys())
+    
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+@app.post("/admin/migrate-user-permissions", status_code=200)
+def migrate_user_permissions(
+    current_user: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Migrate all users' assigned_sites to the new site_permissions format - admin only endpoint"""
+    users = db.query(models.User).all()
+    updated_count = 0
+    
+    # Default permissions based on role
+    default_permissions = {
+        "admin": ["site_view", "site_view_metrics", "site_configure", "site_add", "site_edit", "site_delete"],
+        "maintainer": ["site_view", "site_view_metrics", "site_configure", "site_edit"],
+        "user": ["site_view", "site_view_metrics"],
+        "guest": ["site_view"]
+    }
+    
+    for user in users:
+        # Skip users who already have site_permissions
+        if user.site_permissions:
+            continue
+            
+        # Create site_permissions from assigned_sites
+        site_permissions = {}
+        for site_id in user.assigned_sites:
+            # Assign default permissions based on user role
+            role = user.role.lower()
+            permissions = default_permissions.get(role, ["site_view"])
+            site_permissions[site_id] = permissions
+        
+        # Update user
+        user.site_permissions = site_permissions
+        updated_count += 1
+    
+    db.commit()
+    return {"message": f"Successfully migrated {updated_count} users' permissions"}
+
 @app.get("/")
 def read_root():
     return {"status": "Kepler API is running", "author": "Valtech"}
@@ -209,10 +268,20 @@ def get_status(db: Session = Depends(get_db)):
     for record in status_records:
         site_url = MONITORED_SITES.get(record.site_id)
         if site_url:
+            # Get the most recent metric to get the HTTP status code
+            latest_metric = db.query(models.RequestMetric).filter(
+                models.RequestMetric.site_id == record.site_id
+            ).order_by(models.RequestMetric.timestamp.desc()).first()
+            
+            http_status = None
+            if latest_metric and latest_metric.status_code > 0:
+                http_status = latest_metric.status_code
+            
             result[record.site_id] = {
                 "url": site_url,
                 "status": record.status,
-                "last_updated": record.last_updated
+                "last_updated": record.last_updated,
+                "http_status": http_status
             }
     
     # Add any missing sites with unknown status
@@ -221,7 +290,8 @@ def get_status(db: Session = Depends(get_db)):
             result[site_id] = {
                 "url": url,
                 "status": "Unknown",
-                "last_updated": None
+                "last_updated": None,
+                "http_status": None
             }
             
     return result
@@ -273,11 +343,142 @@ def get_stats(site_id: str = "main", db: Session = Depends(get_db)):
         avg_response_time = sum(r.request_time for r in avg_query) / len(avg_query)
     
     return {
-        "site_id": site_id,
-        "url": MONITORED_SITES.get(site_id, "Unknown"),
         "total_requests_24h": total_requests,
         "successful_requests_24h": successful_requests,
         "failed_requests_24h": failed_requests,
         "success_rate_24h": (successful_requests / total_requests) * 100 if total_requests > 0 else 0,
         "avg_response_time_24h": avg_response_time
-    } 
+    }
+
+@app.get("/metrics/uptime", response_model=schemas.UptimeData)
+def get_uptime(site_id: str = "main", db: Session = Depends(get_db)):
+    """Calculate uptime based on successful requests"""
+    # Last 24 hours
+    day_ago = datetime.now() - timedelta(days=1)
+    uptime_24h = calculate_uptime_for_period(db, site_id, day_ago, datetime.now())
+    
+    # Last 7 days
+    week_ago = datetime.now() - timedelta(days=7)
+    uptime_7d = calculate_uptime_for_period(db, site_id, week_ago, datetime.now())
+    
+    # Last 30 days
+    month_ago = datetime.now() - timedelta(days=30)
+    uptime_30d = calculate_uptime_for_period(db, site_id, month_ago, datetime.now())
+    
+    # Current month
+    today = datetime.now()
+    first_day_of_month = datetime(today.year, today.month, 1)
+    uptime_current_month = calculate_uptime_for_period(db, site_id, first_day_of_month, today)
+    
+    return {
+        "last_24h": uptime_24h,
+        "last_7d": uptime_7d,
+        "last_30d": uptime_30d,
+        "current_month": uptime_current_month
+    }
+
+def calculate_uptime_for_period(db: Session, site_id: str, start_time: datetime, end_time: datetime):
+    """Helper function to calculate uptime percentage for a given period"""
+    # Get all metrics for the period
+    metrics = db.query(models.RequestMetric).filter(
+        models.RequestMetric.site_id == site_id,
+        models.RequestMetric.timestamp >= start_time,
+        models.RequestMetric.timestamp <= end_time
+    ).all()
+    
+    if not metrics:
+        return 100.0  # No metrics recorded = 100% uptime (or could return 0 or None)
+    
+    # Count successful requests (status code 200-299)
+    successful = sum(1 for m in metrics if 200 <= m.status_code < 300)
+    
+    # Calculate uptime percentage
+    return round((successful / len(metrics)) * 100.0, 2)
+
+@app.get("/metrics/historical", response_model=List[schemas.HistoricalMetric])
+def get_historical_metrics(period: str = "7d", site_id: str = "main", db: Session = Depends(get_db)):
+    """Get historical metrics data for charts
+    
+    Periods supported:
+    - 7d: Last 7 days (daily average)
+    - 30d: Last 30 days (daily average)
+    """
+    today = datetime.now()
+    
+    if period == "7d":
+        # Get data for the last 7 days
+        start_date = today - timedelta(days=7)
+        result = []
+        
+        # Calculate daily averages
+        for i in range(7):
+            day_start = start_date + timedelta(days=i)
+            day_end = day_start + timedelta(days=1)
+            
+            # Get metrics for the day
+            day_metrics = db.query(models.RequestMetric).filter(
+                models.RequestMetric.site_id == site_id,
+                models.RequestMetric.timestamp >= day_start,
+                models.RequestMetric.timestamp < day_end
+            ).all()
+            
+            # Calculate average response time
+            avg_time = 0
+            if day_metrics:
+                avg_time = sum(m.request_time for m in day_metrics) / len(day_metrics)
+            
+            # Add data point
+            result.append({
+                "timestamp": day_start,
+                "avg_response_time": avg_time
+            })
+        
+        return result
+    
+    elif period == "30d":
+        # Get data for the last 30 days
+        start_date = today - timedelta(days=30)
+        result = []
+        
+        # Calculate daily averages
+        for i in range(30):
+            day_start = start_date + timedelta(days=i)
+            day_end = day_start + timedelta(days=1)
+            
+            # Get metrics for the day
+            day_metrics = db.query(models.RequestMetric).filter(
+                models.RequestMetric.site_id == site_id,
+                models.RequestMetric.timestamp >= day_start,
+                models.RequestMetric.timestamp < day_end
+            ).all()
+            
+            # Calculate average response time
+            avg_time = 0
+            if day_metrics:
+                avg_time = sum(m.request_time for m in day_metrics) / len(day_metrics)
+            
+            # Add data point
+            result.append({
+                "timestamp": day_start,
+                "avg_response_time": avg_time
+            })
+        
+        return result
+    
+    # Default case - return empty list
+    return []
+
+@app.post("/metrics/record", status_code=201)
+def record_metric(metric: schemas.RequestMetricCreate, db: Session = Depends(get_db)):
+    # Create new metric
+    db_metric = models.RequestMetric(
+        site_id=metric.site_id,
+        status_code=metric.status_code,
+        request_time=metric.request_time,
+        timestamp=metric.timestamp
+    )
+    
+    db.add(db_metric)
+    db.commit()
+    db.refresh(db_metric)
+    return db_metric 

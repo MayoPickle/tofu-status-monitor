@@ -675,4 +675,52 @@
     white-space: normal;
     word-break: break-word;
   }
+}
+
+.mobile-site-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mobile-site-permissions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.site-permission-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background-color: var(--bg-body);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+}
+
+.site-permissions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.permission-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  background-color: rgba(58, 134, 255, 0.1);
+  color: var(--primary);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+.no-sites-message {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
 } 

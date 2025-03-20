@@ -1,0 +1,83 @@
+/* Status Colors - Define color indicators for different status levels */
+
+/* Status value colors */
+.stat-value.excellent {
+  color: var(--color-success);
+  position: relative;
+  display: inline-block;
+}
+
+.stat-value.excellent::before {
+  content: "●";
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+  position: relative;
+  top: -2px;
+  color: var(--color-success);
+}
+
+.stat-value.good {
+  color: var(--color-info);
+  position: relative;
+  display: inline-block;
+}
+
+.stat-value.good::before {
+  content: "●";
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+  position: relative;
+  top: -2px;
+  color: var(--color-info);
+}
+
+.stat-value.average {
+  color: var(--color-warning);
+  position: relative;
+  display: inline-block;
+}
+
+.stat-value.average::before {
+  content: "●";
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+  position: relative;
+  top: -2px;
+  color: var(--color-warning);
+}
+
+.stat-value.poor {
+  color: var(--color-error);
+  position: relative;
+  display: inline-block;
+}
+
+.stat-value.poor::before {
+  content: "●";
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+  position: relative;
+  top: -2px;
+  color: var(--color-error);
+}
+
+/* Background colors for status indicators */
+.bg-status-excellent {
+  background-color: rgba(var(--color-success-rgb), 0.1);
+  border-left: 3px solid var(--color-success);
+}
+
+.bg-status-good {
+  background-color: rgba(var(--color-info-rgb), 0.1);
+  border-left: 3px solid var(--color-info);
+}
+
+.bg-status-average {
+  background-color: rgba(var(--color-warning-rgb), 0.1);
+  border-left: 3px solid var(--color-warning);
+}
+
+.bg-status-poor {
+  background-color: rgba(var(--color-error-rgb), 0.1);
+  border-left: 3px solid var(--color-error);
+} 

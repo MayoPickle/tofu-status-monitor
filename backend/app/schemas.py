@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Type
 
 class RequestMetricBase(BaseModel):
     site_id: str = "main"
@@ -64,15 +64,35 @@ class UserResponse(UserBase):
     id: int
     role: str
     assigned_sites: List[str]
+    site_permissions: Optional[Dict[str, List[str]]] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
         orm_mode = True
 
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any], model: Type['UserResponse']) -> None:
+            props = schema.get('properties', {})
+            if 'site_permissions' in props:
+                props['sitePermissions'] = props.pop('site_permissions')
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
 class TokenData(BaseModel):
-    username: str 
+    username: str
+
+class UptimeData(BaseModel):
+    last_24h: float
+    last_7d: float
+    last_30d: float
+    current_month: float
+
+class HistoricalMetric(BaseModel):
+    timestamp: datetime
+    avg_response_time: float
+
+class SitePermissionsUpdate(BaseModel):
+    sitePermissions: Dict[str, List[str]] 

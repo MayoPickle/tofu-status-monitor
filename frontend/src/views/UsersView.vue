@@ -1,8 +1,10 @@
 <template>
   <div class="users-container">
     <page-header 
-      :is-admin="isAdmin" 
-      @add-user="showAddUserModal = true" 
+      :is-admin="isAdmin"
+      :is-migrating="migratingPermissions" 
+      @add-user="showAddUserModal = true"
+      @migrate-permissions="migratePermissions"
     />
     
     <access-denied v-if="!isAdmin" />
@@ -55,8 +57,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import userStore, { ROLES } from '@/store/userStore'
-import axios from 'axios'
+import userStore from '@/store/userStore'
 
 // Import components
 import PageHeader from '@/components/users/PageHeader.vue'
@@ -109,12 +110,15 @@ export default {
     const searchQuery = ref('')
     const roleFilter = ref('')
     
+    // Migration state
+    const migratingPermissions = ref(false)
+    
     // Load users on mount
     onMounted(() => {
       loadUsers()
     })
     
-    // Load users from the API
+    // Load users from backend API
     const loadUsers = async () => {
       if (!isAdmin.value) return
       
@@ -122,11 +126,11 @@ export default {
       error.value = null
       
       try {
-        const response = await axios.get('/users')
-        users.value = response.data
+        // Get users from API
+        users.value = await userStore.getAllUsers()
       } catch (err) {
-        console.error('Failed to load users:', err)
-        error.value = err.response?.data?.detail || 'Failed to load users'
+        console.error('Failed to load users from API:', err)
+        error.value = 'Failed to load users. Please try again later.'
       } finally {
         loading.value = false
       }
@@ -159,37 +163,34 @@ export default {
           if (!updateData.password) {
             delete updateData.password // Don't update password if blank
           }
-          // Remove username from update data as it shouldn't be changed
-          delete updateData.username
           
-          await axios.put(`/users/${updateData.id}`, updateData)
+          // Update user via API
+          await userStore.updateUser(selectedUser.value.id, updateData)
         } else {
-          // Add new user
-          await axios.post('/register', formData)
+          // Add new user via API
+          await userStore.addUser(formData)
         }
         
         await loadUsers()
         closeModals()
       } catch (err) {
         console.error('Failed to save user:', err)
-        error.value = err.response?.data?.detail || 'Failed to save user'
+        error.value = err.message || 'Failed to save user'
       }
     }
     
-    // Save site assignments
-    const saveSiteAssignments = async (assignedSites) => {
+    // Save site permissions
+    const saveSiteAssignments = async (sitePermissions) => {
       if (selectedUser.value) {
         try {
-          const updateData = {
-            assignedSites
-          }
+          // Update permissions via API
+          await userStore.updateUserPermissions(selectedUser.value.id, sitePermissions)
           
-          await axios.put(`/users/${selectedUser.value.id}`, updateData)
           await loadUsers()
           closeModals()
         } catch (err) {
-          console.error('Failed to assign sites:', err)
-          error.value = err.response?.data?.detail || 'Failed to assign sites'
+          console.error('Failed to update site permissions:', err)
+          error.value = err.message || 'Failed to update site permissions'
         }
       }
     }
@@ -198,12 +199,14 @@ export default {
     const confirmDeleteUser = async () => {
       if (selectedUser.value) {
         try {
-          await axios.delete(`/users/${selectedUser.value.id}`)
+          // Delete user via API
+          await userStore.deleteUser(selectedUser.value.id)
+          
           await loadUsers()
           closeModals()
         } catch (err) {
           console.error('Failed to delete user:', err)
-          error.value = err.response?.data?.detail || 'Failed to delete user'
+          error.value = err.message || 'Failed to delete user'
         }
       }
     }
@@ -232,6 +235,28 @@ export default {
       })
     })
     
+    // Migration function for all users' permissions
+    const migratePermissions = async () => {
+      try {
+        migratingPermissions.value = true
+        
+        // Call the API to migrate permissions
+        const result = await userStore.migrateUserPermissions()
+        
+        // Show success message
+        alert(result.message || 'Permissions migrated successfully')
+        
+        // Refresh users list
+        await loadUsers()
+      } catch (err) {
+        console.error('Failed to migrate permissions:', err)
+        error.value = err.message || 'Failed to migrate permissions'
+        alert('Failed to migrate permissions. See console for details.')
+      } finally {
+        migratingPermissions.value = false
+      }
+    }
+    
     return {
       users,
       isAdmin,
@@ -252,7 +277,9 @@ export default {
       saveUser,
       saveSiteAssignments,
       confirmDeleteUser,
-      closeModals
+      closeModals,
+      migratingPermissions,
+      migratePermissions
     }
   }
 }

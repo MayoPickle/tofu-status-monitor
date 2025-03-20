@@ -32,20 +32,29 @@
       </div>
       <div class="mobile-detail-item">
         <span class="mobile-label">Sites:</span>
-        <div class="mobile-site-badges">
-          <span v-for="siteId in user.assignedSites" 
-                :key="siteId" 
-                class="site-badge">
-            {{ getSiteName(siteId) }}
-          </span>
+        <div class="mobile-site-permissions">
+          <div v-if="user.sitePermissions && Object.keys(user.sitePermissions).length > 0">
+            <div v-for="(permissions, siteId) in user.sitePermissions" 
+                  :key="siteId" 
+                  class="site-permission-item">
+              <span class="site-badge">{{ getSiteName(siteId) }}</span>
+              <div class="site-permissions-list">
+                <span v-for="permission in permissions" 
+                      :key="permission" 
+                      class="permission-badge">
+                  {{ formatPermission(permission) }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <span v-else class="no-sites-message">No sites assigned</span>
           <button 
-            v-if="canAssignSites(user)"
             class="assign-sites-button"
             @click="$emit('assign-sites', user)">
             <svg viewBox="0 0 24 24" class="button-icon">
               <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
             </svg>
-            Assign
+            Manage Sites
           </button>
         </div>
       </div>
@@ -54,6 +63,17 @@
 </template>
 
 <script>
+import { SITE_PERMISSIONS } from '@/store/userStore'
+
+const PERMISSION_LABELS = {
+  [SITE_PERMISSIONS.SITE_VIEW]: 'View',
+  [SITE_PERMISSIONS.SITE_VIEW_METRICS]: 'View Metrics',
+  [SITE_PERMISSIONS.SITE_CONFIGURE]: 'Configure',
+  [SITE_PERMISSIONS.SITE_ADD]: 'Add',
+  [SITE_PERMISSIONS.SITE_EDIT]: 'Edit',
+  [SITE_PERMISSIONS.SITE_DELETE]: 'Delete'
+}
+
 export default {
   name: 'UserCard',
   props: {
@@ -83,6 +103,9 @@ export default {
     },
     canAssignSites(user) {
       return user.role !== 'admin' && user.role !== 'maintainer'
+    },
+    formatPermission(permission) {
+      return PERMISSION_LABELS[permission] || permission.replace('site_', '').replace('_', ' ')
     }
   }
 }
