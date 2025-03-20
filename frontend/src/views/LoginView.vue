@@ -1,5 +1,26 @@
 <template>
   <div class="login-container">
+    <!-- Add modern background elements -->
+    <div class="floating-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="grid-lines"></div>
+    <div class="planet-ring"></div>
+    <div class="stars">
+      <div class="star" v-for="n in 50" :key="n" :style="{ 
+        top: Math.random() * 100 + '%', 
+        left: Math.random() * 100 + '%',
+        width: (Math.random() * 2 + 1) + 'px',
+        height: (Math.random() * 2 + 1) + 'px',
+        animationDelay: Math.random() * 4 + 's'
+      }"></div>
+    </div>
+    
     <div class="login-card">
       <div class="login-header">
         <div class="logo">
@@ -295,9 +316,231 @@ export default {
   min-height: 100%;
   padding: 2rem;
   background-color: var(--bg-body);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Modern background elements */
+.login-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-image: 
-    radial-gradient(circle at 10% 20%, rgba(58, 134, 255, 0.05) 0%, transparent 30%),
-    radial-gradient(circle at 90% 80%, rgba(251, 86, 7, 0.05) 0%, transparent 30%);
+    radial-gradient(circle at 10% 20%, rgba(58, 134, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(251, 86, 7, 0.08) 0%, transparent 40%);
+  z-index: -1;
+}
+
+/* Planet */
+.login-container::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  top: -30px;
+  right: -20px;
+  background: radial-gradient(circle, rgba(42, 157, 143, 0.4) 0%, rgba(58, 134, 255, 0.2) 60%, transparent 100%);
+  border-radius: 50%;
+  box-shadow: inset 10px -10px 20px rgba(255, 255, 255, 0.3),
+              inset -5px 5px 15px rgba(0, 0, 30, 0.5);
+  z-index: -1;
+  animation: planetRotate 40s infinite linear;
+}
+
+@keyframes planetRotate {
+  0% {
+    box-shadow: inset 10px -10px 20px rgba(255, 255, 255, 0.3),
+                inset -5px 5px 15px rgba(0, 0, 30, 0.5);
+  }
+  50% {
+    box-shadow: inset -10px 10px 20px rgba(255, 255, 255, 0.3),
+                inset 5px -5px 15px rgba(0, 0, 30, 0.5);
+  }
+  100% {
+    box-shadow: inset 10px -10px 20px rgba(255, 255, 255, 0.3),
+                inset -5px 5px 15px rgba(0, 0, 30, 0.5);
+  }
+}
+
+/* Planet Ring */
+.planet-ring {
+  position: absolute;
+  top: -40px;
+  right: -50px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  z-index: -1;
+  overflow: visible;
+  transform: rotateX(75deg) rotateY(15deg);
+  pointer-events: none;
+  animation: orbitRotate 60s infinite linear;
+}
+
+@keyframes orbitRotate {
+  from { transform: rotateX(75deg) rotateY(15deg) rotateZ(0deg); }
+  to { transform: rotateX(75deg) rotateY(15deg) rotateZ(360deg); }
+}
+
+.planet-ring::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 220px;
+  height: 220px;
+  transform: translate(-50%, -50%);
+  border: 8px solid rgba(251, 186, 114, 0.15);
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(251, 186, 114, 0.3);
+}
+
+.planet-ring::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 180px;
+  height: 180px;
+  transform: translate(-50%, -50%);
+  border: 4px solid rgba(58, 134, 255, 0.15);
+  border-radius: 50%;
+}
+
+/* Floating Dots */
+.login-container .floating-dots {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+.login-container .floating-dots .dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: rgba(58, 134, 255, 0.3);
+  animation: float 8s infinite ease-in-out;
+}
+
+.login-container .floating-dots .dot:nth-child(1) {
+  top: 15%;
+  left: 10%;
+  width: 4px;
+  height: 4px;
+  animation-delay: 0s;
+  background-color: rgba(58, 134, 255, 0.3);
+}
+
+.login-container .floating-dots .dot:nth-child(2) {
+  top: 25%;
+  left: 20%;
+  width: 8px;
+  height: 8px;
+  animation-delay: 1s;
+  animation-duration: 10s;
+  background-color: rgba(42, 157, 143, 0.3);
+}
+
+.login-container .floating-dots .dot:nth-child(3) {
+  top: 60%;
+  left: 5%;
+  width: 6px;
+  height: 6px;
+  animation-delay: 2s;
+  animation-duration: 7s;
+  background-color: rgba(251, 86, 7, 0.3);
+}
+
+.login-container .floating-dots .dot:nth-child(4) {
+  top: 70%;
+  left: 80%;
+  width: 5px;
+  height: 5px;
+  animation-delay: 3s;
+  animation-duration: 9s;
+  background-color: rgba(58, 134, 255, 0.3);
+}
+
+.login-container .floating-dots .dot:nth-child(5) {
+  top: 40%;
+  left: 85%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 4s;
+  animation-duration: 8s;
+  background-color: rgba(42, 157, 143, 0.3);
+}
+
+.login-container .floating-dots .dot:nth-child(6) {
+  top: 30%;
+  left: 60%;
+  width: 4px;
+  height: 4px;
+  animation-delay: 2.5s;
+  animation-duration: 11s;
+  background-color: rgba(251, 86, 7, 0.3);
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-15px) translateX(10px);
+  }
+  50% {
+    transform: translateY(8px) translateX(-8px);
+  }
+  75% {
+    transform: translateY(12px) translateX(5px);
+  }
+}
+
+/* Stars */
+.stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: twinkle 4s infinite ease-in-out;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.7; }
+}
+
+/* Grid Lines */
+.grid-lines {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: 
+    linear-gradient(to right, var(--primary) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--primary) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
 .login-card {
@@ -310,6 +553,8 @@ export default {
   border: 1px solid var(--border-color);
   transition: var(--transition);
   animation: fadeIn 0.5s ease;
+  position: relative;
+  z-index: 2;
 }
 
 @keyframes fadeIn {

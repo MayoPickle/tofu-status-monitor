@@ -93,6 +93,72 @@
       </div>
     </div>
     
+    <div class="architecture-section">
+      <div class="card architecture-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M3,3H21V21H3V3M7,7V9H9V15H7V17H13V15H11V9H13V7H7Z" />
+          </svg>
+        </div>
+        <h2>System Architecture</h2>
+        <div class="architecture-diagram">
+          <pre class="diagram-text">
+╔═════════════════════════════════╗
+║         Client Browser          ║
+╚═══════════════╦═════════════════╝
+                ▼
+╔═════════════════════════════════╗
+║        Frontend (Vue.js)        ║
+║  ┌───────────┐  ┌───────────┐   ║
+║  │   Views   │  │Components │   ║
+║  └─────┬─────┘  └─────┬─────┘   ║
+║        └────────┬─────┘         ║
+║         Vue Router/Store        ║
+╚═══════════════╦═════════════════╝
+      HTTP/REST ▼
+╔═════════════════════════════════╗
+║       Backend (FastAPI)         ║
+║  ┌───────────┐  ┌───────────┐   ║
+║  │   API     │  │   Auth    │   ║
+║  │ Endpoints │  │  Service  │   ║
+║  └─────┬─────┘  └─────┬─────┘   ║
+║        └────────┬─────┘         ║
+║         Database Models         ║
+║         SQLAlchemy ORM          ║
+╚═══════════════╦═════════════════╝
+                ▼
+╔═════════════════════════════════╗
+║      PostgreSQL Database        ║
+╚═══════════════╦═════════════════╝
+                ▼
+╔═════════════════════════════════╗
+║        Celery Workers           ║
+║  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓   ║
+║  ┃  • Site Monitoring        ┃   ║
+║  ┃  • Metrics Collection     ┃   ║
+║  ┃  • Data Aggregation       ┃   ║
+║  ┃  • Status Updates         ┃   ║
+║  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛   ║
+╚═══════════════╦═════════════════╝
+                ▼
+╔═════════════════════════════════╗
+║      Redis (Task Queue)         ║
+╚═══════════════╦═════════════════╝
+                ▼
+╔═════════════════════════════════╗
+║     Celery Beat (Scheduling)    ║
+╚═══════════════╦═════════════════╝
+                ▼
+╔═════════════════════════════════╗
+║         Monitored Sites         ║
+║                                 ║
+║    Main     Backup    Staging   ║
+╚═════════════════════════════════╝</pre>
+        </div>
+        <p>The Kepler monitoring system follows a modern architecture with a Vue.js frontend, FastAPI backend, and a robust worker system for continuous monitoring.</p>
+      </div>
+    </div>
+    
     <div class="about-footer">
       <p>Built with <span class="heart">❤</span> by Valtech</p>
       <div class="version">Version 1.0.0</div>
@@ -129,6 +195,11 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
+}
+
+.architecture-section {
+  margin-top: 2rem;
+  width: 100%;
 }
 
 .card {
@@ -170,6 +241,57 @@
 
 .feature-card .card-icon svg {
   fill: var(--primary);
+}
+
+.architecture-card .card-icon {
+  background-color: rgba(87, 115, 153, 0.1);
+}
+
+.architecture-card .card-icon svg {
+  fill: #577399; /* Custom blue for architecture icon */
+}
+
+.architecture-card {
+  background-color: var(--bg-secondary);
+  width: 100%;
+  margin-top: 2rem;
+  grid-column: 1 / -1;
+  padding: 2.5rem;
+}
+
+.architecture-card h2 {
+  text-align: center;
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.architecture-diagram {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background-color: var(--bg-primary);
+  padding: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.diagram-text {
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+  padding: 1.5rem;
+  margin: 0;
+  white-space: pre;
+}
+
+/* Additional explanation text */
+.architecture-card p {
+  text-align: center;
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 1rem auto 0;
 }
 
 .tech-card .card-icon {
@@ -316,6 +438,15 @@ code {
   
   .subtitle {
     font-size: 1.1rem;
+  }
+  
+  .architecture-card {
+    order: unset;
+    width: 100%;
+  }
+  
+  .diagram-text {
+    font-size: 0.75rem;
   }
 }
 </style> 
