@@ -21,8 +21,21 @@ module.exports = defineConfig({
       }
     },
     output: {
-      filename: '[name].[hash].js',
-      chunkFilename: '[name].[hash].js'
+      filename: '[name].[contenthash:8].js',
+      chunkFilename: '[name].[contenthash:8].js'
+    },
+    optimization: {
+      moduleIds: 'deterministic',
+      chunkIds: 'named',
+      splitChunks: {
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all'
+          }
+        }
+      }
     }
   },
   pages: {

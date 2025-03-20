@@ -15,7 +15,7 @@ const routes = [
   {
     path: '/metrics',
     name: 'metrics',
-    component: () => import('../views/MetricsView.vue'),
+    component: () => import(/* webpackChunkName: "metrics" */ '../views/MetricsView.vue'),
     meta: {
       requiresAuth: false,
       permissions: [PERMISSIONS.VIEW_DETAILED_METRICS]
@@ -24,7 +24,7 @@ const routes = [
   {
     path: '/users',
     name: 'users',
-    component: () => import('../views/UsersView.vue'),
+    component: () => import(/* webpackChunkName: "users" */ '../views/UsersView.vue'),
     meta: {
       requiresAuth: true,
       permissions: [PERMISSIONS.MANAGE_USERS]
@@ -33,7 +33,7 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('../views/LoginView.vue'),
+    component: () => import(/* webpackChunkName: "login" */ '../views/LoginView.vue'),
     meta: {
       requiresAuth: false
     }
@@ -41,7 +41,7 @@ const routes = [
   {
     path: '/about',
     name: 'about',
-    component: () => import('../views/AboutView.vue'),
+    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
     meta: {
       requiresAuth: false
     }
