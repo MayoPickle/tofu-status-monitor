@@ -8,16 +8,19 @@
       <div class="dot"></div>
       <div class="dot"></div>
       <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
     </div>
     <div class="grid-lines"></div>
     <div class="planet-ring"></div>
+    <div class="orbital-path"></div>
     <div class="stars">
-      <div class="star" v-for="n in 50" :key="n" :style="{ 
+      <div class="star" v-for="n in 80" :key="n" :style="{ 
         top: Math.random() * 100 + '%', 
         left: Math.random() * 100 + '%',
         width: (Math.random() * 2 + 1) + 'px',
         height: (Math.random() * 2 + 1) + 'px',
-        animationDelay: Math.random() * 4 + 's'
+        animationDelay: Math.random() * 5 + 's'
       }"></div>
     </div>
     
@@ -330,8 +333,9 @@ export default {
   right: 0;
   bottom: 0;
   background-image: 
-    radial-gradient(circle at 10% 20%, rgba(58, 134, 255, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(251, 86, 7, 0.08) 0%, transparent 40%);
+    radial-gradient(circle at 10% 20%, rgba(58, 134, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(251, 86, 7, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(42, 157, 143, 0.08) 0%, transparent 70%);
   z-index: -1;
 }
 
@@ -339,46 +343,47 @@ export default {
 .login-container::after {
   content: "";
   position: absolute;
-  width: 180px;
-  height: 180px;
-  top: -30px;
-  right: -20px;
-  background: radial-gradient(circle, rgba(42, 157, 143, 0.4) 0%, rgba(58, 134, 255, 0.2) 60%, transparent 100%);
+  width: 220px;
+  height: 220px;
+  top: -40px;
+  right: -30px;
+  background: radial-gradient(circle, rgba(42, 157, 143, 0.5) 0%, rgba(58, 134, 255, 0.3) 60%, transparent 100%);
   border-radius: 50%;
-  box-shadow: inset 10px -10px 20px rgba(255, 255, 255, 0.3),
-              inset -5px 5px 15px rgba(0, 0, 30, 0.5);
+  box-shadow: inset 20px -20px 40px rgba(255, 255, 255, 0.4),
+              inset -10px 10px 30px rgba(0, 0, 40, 0.6);
   z-index: -1;
-  animation: planetRotate 40s infinite linear;
+  animation: planetRotate 60s infinite linear;
+  filter: blur(4px);
 }
 
 @keyframes planetRotate {
   0% {
-    box-shadow: inset 10px -10px 20px rgba(255, 255, 255, 0.3),
-                inset -5px 5px 15px rgba(0, 0, 30, 0.5);
+    box-shadow: inset 20px -20px 40px rgba(255, 255, 255, 0.4),
+                inset -10px 10px 30px rgba(0, 0, 40, 0.6);
   }
   50% {
-    box-shadow: inset -10px 10px 20px rgba(255, 255, 255, 0.3),
-                inset 5px -5px 15px rgba(0, 0, 30, 0.5);
+    box-shadow: inset -20px 20px 40px rgba(255, 255, 255, 0.4),
+                inset 10px -10px 30px rgba(0, 0, 40, 0.6);
   }
   100% {
-    box-shadow: inset 10px -10px 20px rgba(255, 255, 255, 0.3),
-                inset -5px 5px 15px rgba(0, 0, 30, 0.5);
+    box-shadow: inset 20px -20px 40px rgba(255, 255, 255, 0.4),
+                inset -10px 10px 30px rgba(0, 0, 40, 0.6);
   }
 }
 
 /* Planet Ring */
 .planet-ring {
   position: absolute;
-  top: -40px;
-  right: -50px;
-  width: 240px;
-  height: 240px;
+  top: -50px;
+  right: -70px;
+  width: 300px;
+  height: 300px;
   border-radius: 50%;
   z-index: -1;
   overflow: visible;
   transform: rotateX(75deg) rotateY(15deg);
   pointer-events: none;
-  animation: orbitRotate 60s infinite linear;
+  animation: orbitRotate 80s infinite linear;
 }
 
 @keyframes orbitRotate {
@@ -391,12 +396,12 @@ export default {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 220px;
-  height: 220px;
+  width: 260px;
+  height: 260px;
   transform: translate(-50%, -50%);
-  border: 8px solid rgba(251, 186, 114, 0.15);
+  border: 10px solid rgba(251, 186, 114, 0.2);
   border-radius: 50%;
-  box-shadow: 0 0 15px rgba(251, 186, 114, 0.3);
+  box-shadow: 0 0 20px rgba(251, 186, 114, 0.4);
 }
 
 .planet-ring::after {
@@ -404,11 +409,28 @@ export default {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 180px;
-  height: 180px;
+  width: 220px;
+  height: 220px;
   transform: translate(-50%, -50%);
-  border: 4px solid rgba(58, 134, 255, 0.15);
+  border: 6px solid rgba(58, 134, 255, 0.2);
   border-radius: 50%;
+}
+
+/* Additional ring */
+.login-container .orbital-path {
+  position: absolute;
+  top: 25%;
+  left: -15%;
+  width: 150vh;
+  height: 150vh;
+  border: 1px dashed rgba(58, 134, 255, 0.1);
+  border-radius: 50%;
+  animation: orbit-rotate 150s linear infinite;
+}
+
+@keyframes orbit-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Floating Dots */
@@ -488,18 +510,38 @@ export default {
   background-color: rgba(251, 86, 7, 0.3);
 }
 
+.login-container .floating-dots .dot:nth-child(7) {
+  top: 80%;
+  left: 30%;
+  width: 6px;
+  height: 6px;
+  animation-delay: 3.5s;
+  animation-duration: 9s;
+  background-color: rgba(251, 86, 7, 0.3);
+}
+
+.login-container .floating-dots .dot:nth-child(8) {
+  top: 15%;
+  left: 70%;
+  width: 5px;
+  height: 5px;
+  animation-delay: 4.5s;
+  animation-duration: 10s;
+  background-color: rgba(58, 134, 255, 0.3);
+}
+
 @keyframes float {
   0%, 100% {
     transform: translateY(0) translateX(0);
   }
   25% {
-    transform: translateY(-15px) translateX(10px);
+    transform: translateY(-25px) translateX(15px);
   }
   50% {
-    transform: translateY(8px) translateX(-8px);
+    transform: translateY(10px) translateX(-12px);
   }
   75% {
-    transform: translateY(12px) translateX(5px);
+    transform: translateY(15px) translateX(8px);
   }
 }
 
@@ -523,8 +565,8 @@ export default {
 }
 
 @keyframes twinkle {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.7; transform: scale(1.2); }
 }
 
 /* Grid Lines */
@@ -541,6 +583,12 @@ export default {
     linear-gradient(to right, var(--primary) 1px, transparent 1px),
     linear-gradient(to bottom, var(--primary) 1px, transparent 1px);
   background-size: 40px 40px;
+  animation: grid-pulse 10s infinite ease-in-out;
+}
+
+@keyframes grid-pulse {
+  0%, 100% { opacity: 0.04; }
+  50% { opacity: 0.09; }
 }
 
 .login-card {
@@ -555,12 +603,33 @@ export default {
   animation: fadeIn 0.5s ease;
   position: relative;
   z-index: 2;
+  backdrop-filter: blur(10px);
+}
+
+/* Add card glow effect */
+.login-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 40px rgba(58, 134, 255, 0.15);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.login-card:hover::after {
+  opacity: 1;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -571,6 +640,20 @@ export default {
 .login-header {
   padding: 2rem 2rem 1.5rem;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add subtle space gradient behind the header */
+.login-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at top center, rgba(58, 134, 255, 0.1) 0%, transparent 70%);
+  z-index: 0;
 }
 
 .logo {
@@ -578,38 +661,67 @@ export default {
   flex-direction: column;
   align-items: center;
   margin-bottom: 1rem;
+  position: relative;
 }
 
 .logo-icon {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   fill: var(--primary);
   margin-bottom: 1rem;
-  filter: drop-shadow(0 2px 8px rgba(58, 134, 255, 0.4));
-  animation: pulse 3s infinite ease-in-out;
+  filter: drop-shadow(0 4px 12px rgba(58, 134, 255, 0.5));
+  animation: pulse 4s infinite ease-in-out;
+  position: relative;
+  z-index: 1;
+}
+
+/* Add glow effect to logo */
+.logo::before {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(58, 134, 255, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(10px);
+  z-index: 0;
 }
 
 @keyframes pulse {
   0%, 100% {
-    filter: drop-shadow(0 2px 8px rgba(58, 134, 255, 0.4));
+    filter: drop-shadow(0 4px 12px rgba(58, 134, 255, 0.4));
+    transform: scale(1) rotate(0deg);
   }
-  50% {
-    filter: drop-shadow(0 4px 12px rgba(58, 134, 255, 0.6));
+  33% {
+    filter: drop-shadow(0 8px 20px rgba(58, 134, 255, 0.7));
+    transform: scale(1.05) rotate(2deg);
+  }
+  66% {
+    filter: drop-shadow(0 6px 16px rgba(58, 134, 255, 0.5));
+    transform: scale(1.02) rotate(-2deg);
   }
 }
 
 .login-header h1 {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 0.5rem;
   letter-spacing: -0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
 }
 
 .auth-subtitle {
   color: var(--text-secondary);
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .error-message {
@@ -622,6 +734,8 @@ export default {
   border-radius: var(--radius);
   margin: 0 2rem 1rem;
   animation: shake 0.5s ease;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 0, 110, 0.2);
 }
 
 @keyframes shake {
@@ -635,25 +749,50 @@ export default {
   height: 20px;
   flex-shrink: 0;
   fill: var(--danger);
+  animation: error-pulse 2s infinite ease-in-out;
+}
+
+@keyframes error-pulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
 }
 
 .auth-content {
   padding: 0 2rem 2rem;
+  position: relative;
+}
+
+/* Add subtle space particle effects for form */
+.auth-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 90% 10%, rgba(58, 134, 255, 0.05) 0%, transparent 20%),
+    radial-gradient(circle at 10% 90%, rgba(42, 157, 143, 0.05) 0%, transparent 20%);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .login-form {
   margin-bottom: 1.5rem;
+  position: relative;
 }
 
 .form-group {
   margin-bottom: 1.5rem;
+  position: relative;
 }
 
 .form-label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   font-weight: 500;
   color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .input-wrapper {
@@ -662,29 +801,58 @@ export default {
   align-items: center;
 }
 
+.input-wrapper::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 12%;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(to right, var(--primary), var(--primary-light));
+  transition: width 0.3s ease, left 0.3s ease;
+  border-radius: 2px;
+  opacity: 0;
+}
+
+.input-wrapper:focus-within::after {
+  width: 76%;
+  left: 12%;
+  opacity: 1;
+}
+
 .input-icon {
   position: absolute;
   left: 1rem;
   width: 20px;
   height: 20px;
   fill: var(--text-secondary);
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.input-wrapper:focus-within .input-icon {
+  fill: var(--primary);
+  filter: drop-shadow(0 0 3px rgba(58, 134, 255, 0.4));
+  transform: scale(1.1);
 }
 
 .form-control {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 3rem;
+  padding: 0.875rem 1rem 0.875rem 3rem;
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
   font-size: 1rem;
   color: var(--text-primary);
-  transition: var(--transition);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .form-control:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.15);
+  box-shadow: 0 0 0 4px rgba(58, 134, 255, 0.15);
+  transform: translateY(-1px);
 }
 
 .form-control::placeholder {
@@ -700,14 +868,62 @@ export default {
 
 .submit-button {
   width: 100%;
-  padding: 0.875rem;
+  padding: 1rem;
   font-size: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  z-index: 1;
+}
+
+/* Add glow effect on hover */
+.submit-button::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+  z-index: -1;
+  border-radius: var(--radius);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  filter: blur(8px);
+}
+
+.submit-button:hover::before {
+  opacity: 0.8;
+}
+
+/* Add cosmic space particle effect */
+.submit-button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.7s ease;
+  z-index: 1;
+}
+
+.submit-button:hover::after {
+  left: 100%;
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(58, 134, 255, 0.3);
 }
 
 .submit-button:disabled {
   cursor: not-allowed;
   opacity: 0.7;
+  background: linear-gradient(135deg, var(--gray), var(--gray-dark));
 }
 
 .loading-text {
@@ -715,6 +931,8 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  position: relative;
+  z-index: 2;
 }
 
 .loading-dots {
@@ -723,19 +941,19 @@ export default {
   gap: 4px;
 }
 
-.dot {
-  width: 4px;
-  height: 4px;
+.loading-dots .dot {
+  width: 5px;
+  height: 5px;
   background-color: currentColor;
   border-radius: 50%;
   animation: dot-pulse 1.5s infinite ease-in-out;
 }
 
-.dot:nth-child(2) {
+.loading-dots .dot:nth-child(2) {
   animation-delay: 0.2s;
 }
 
-.dot:nth-child(3) {
+.loading-dots .dot:nth-child(3) {
   animation-delay: 0.4s;
 }
 
@@ -746,7 +964,7 @@ export default {
   }
   50% {
     opacity: 1;
-    transform: scale(1.2);
+    transform: scale(1.3);
   }
 }
 
@@ -755,23 +973,72 @@ export default {
   border-top: 1px solid var(--border-color);
   margin-bottom: 1.5rem;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add subtle line glow effect */
+.auth-options::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 30%;
+  width: 40%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--primary), transparent);
+  filter: blur(1px);
+  animation: line-glow 4s infinite ease-in-out;
+}
+
+@keyframes line-glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
 
 .switch-mode-button {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.85rem;
   font-size: 0.95rem;
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.switch-mode-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Add subtle hover animation */
+.switch-mode-button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(58, 134, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+  z-index: -1;
+}
+
+.switch-mode-button:hover::after {
+  left: 100%;
 }
 
 /* Demo Accounts Section */
 .demo-section {
-  animation: fadeUp 0.5s ease;
+  animation: fadeUp 0.7s ease;
+  position: relative;
 }
 
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -786,6 +1053,22 @@ export default {
   margin-bottom: 1rem;
   letter-spacing: -0.5px;
   text-align: center;
+  position: relative;
+  display: inline-block;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Add underline effect */
+.demo-title::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 25%;
+  width: 50%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--primary), transparent);
+  border-radius: var(--radius);
 }
 
 .demo-accounts {
@@ -803,40 +1086,90 @@ export default {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  position: relative;
+  overflow: hidden;
+}
+
+.account-item::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .account-item:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-  border-color: var(--border-color);
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary);
+  z-index: 1;
+}
+
+.account-item:hover::before {
+  opacity: 1;
 }
 
 .account-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius);
   flex-shrink: 0;
+  transition: all 0.3s ease;
+  z-index: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.account-icon-wrapper::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.account-item:hover .account-icon-wrapper {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.account-item:hover .account-icon-wrapper::after {
+  opacity: 1;
 }
 
 .account-icon-wrapper.admin {
-  background-color: rgba(58, 134, 255, 0.1);
+  background-color: rgba(58, 134, 255, 0.15);
 }
 
 .account-icon-wrapper.maintainer {
-  background-color: rgba(251, 86, 7, 0.1);
+  background-color: rgba(251, 86, 7, 0.15);
 }
 
 .account-icon-wrapper.user {
-  background-color: rgba(34, 197, 94, 0.1);
+  background-color: rgba(34, 197, 94, 0.15);
 }
 
 .account-icon {
   width: 24px;
   height: 24px;
+  transition: all 0.3s ease;
+}
+
+.account-item:hover .account-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .account-icon-wrapper.admin .account-icon {
@@ -853,18 +1186,25 @@ export default {
 
 .account-info {
   flex: 1;
+  z-index: 1;
 }
 
 .account-name {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.25rem;
+  transition: color 0.3s ease;
+}
+
+.account-item:hover .account-name {
+  color: var(--primary);
 }
 
 .account-credentials {
   font-size: 0.875rem;
   color: var(--text-secondary);
   font-family: monospace;
+  transition: color 0.3s ease;
 }
 
 .guest-button {
@@ -873,15 +1213,33 @@ export default {
   justify-content: center;
   gap: 0.75rem;
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.85rem;
   font-size: 0.95rem;
-  transition: var(--transition);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(to right, var(--bg-secondary), var(--bg-primary), var(--bg-secondary));
+  background-size: 200% 100%;
+}
+
+.guest-button:hover {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--primary-light);
+  color: var(--primary);
 }
 
 .guest-icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   fill: currentColor;
+  transition: all 0.3s ease;
+}
+
+.guest-button:hover .guest-icon {
+  transform: rotate(15deg);
+  fill: var(--primary);
 }
 
 /* Media queries for responsive design */

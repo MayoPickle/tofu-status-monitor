@@ -145,8 +145,8 @@ export default {
   display: flex;
   padding: 1.25rem;
   border-radius: 8px;
-  background-color: white;
-  border: 1px solid #f3f4f6;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
   position: relative;
@@ -163,7 +163,7 @@ export default {
   align-items: flex-start;
   justify-content: center;
   margin-right: 1rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .stat-content {
@@ -181,7 +181,7 @@ export default {
 .stat-value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   letter-spacing: -0.5px;
 }
 
@@ -215,7 +215,7 @@ export default {
 
 .stat-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -247,19 +247,19 @@ export default {
 
 /* Status text colors */
 .stat-value.excellent {
-  color: #16a34a;
+  color: var(--success);
 }
 
 .stat-value.good {
-  color: #2563eb;
+  color: var(--primary);
 }
 
 .stat-value.average {
-  color: #d97706;
+  color: var(--accent);
 }
 
 .stat-value.poor {
-  color: #dc2626;
+  color: var(--danger);
 }
 
 .refresh-btn {
@@ -280,7 +280,7 @@ export default {
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   margin-top: 0.5rem;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--border-color);
   padding-top: 1rem;
 }
 
@@ -292,7 +292,7 @@ export default {
 
 .trend-label {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .trend-value {
@@ -304,11 +304,11 @@ export default {
 }
 
 .trend-value.up {
-  color: #16a34a;
+  color: var(--success);
 }
 
 .trend-value.down {
-  color: #dc2626;
+  color: var(--danger);
 }
 
 /* Media queries */

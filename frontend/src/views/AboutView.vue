@@ -1,5 +1,20 @@
 <template>
   <div class="about">
+    <!-- 太空背景元素 -->
+    <div class="stars">
+      <div class="star" v-for="n in 80" :key="n" :style="{ 
+        top: Math.random() * 100 + '%', 
+        left: Math.random() * 100 + '%',
+        width: (Math.random() * 2 + 1) + 'px',
+        height: (Math.random() * 2 + 1) + 'px',
+        animationDelay: Math.random() * 5 + 's'
+      }"></div>
+    </div>
+    <div class="grid-lines"></div>
+    <div class="planet-effect"></div>
+    <div class="planet-ring"></div>
+    <div class="orbital-path"></div>
+    
     <div class="about-header">
       <h1>About Kepler</h1>
       <p class="subtitle">Elegant monitoring for your critical endpoints</p>
@@ -103,57 +118,57 @@
         <h2>System Architecture</h2>
         <div class="architecture-diagram">
           <pre class="diagram-text">
-╔═════════════════════════════════╗
+<span class="diagram-highlight">╔═════════════════════════════════╗</span>
 ║         Client Browser          ║
-╚═══════════════╦═════════════════╝
-                ▼
-╔═════════════════════════════════╗
+<span class="diagram-highlight">╚═══════════════╦═════════════════╝</span>
+                <span class="diagram-highlight">▼</span>
+<span class="diagram-highlight">╔═════════════════════════════════╗</span>
 ║        Frontend (Vue.js)        ║
-║  ┌───────────┐  ┌───────────┐   ║
+║  <span class="diagram-highlight">┌───────────┐</span>  <span class="diagram-highlight">┌───────────┐</span>   ║
 ║  │   Views   │  │Components │   ║
-║  └─────┬─────┘  └─────┬─────┘   ║
-║        └────────┬─────┘         ║
+║  <span class="diagram-highlight">└─────┬─────┘</span>  <span class="diagram-highlight">└─────┬─────┘</span>   ║
+║        <span class="diagram-highlight">└────────┬─────┘</span>         ║
 ║         Vue Router/Store        ║
-╚═══════════════╦═════════════════╝
-      HTTP/REST ▼
-╔═════════════════════════════════╗
+<span class="diagram-highlight">╚═══════════════╦═════════════════╝</span>
+      HTTP/REST <span class="diagram-highlight">▼</span>
+<span class="diagram-highlight">╔═════════════════════════════════╗</span>
 ║       Backend (FastAPI)         ║
-║  ┌───────────┐  ┌───────────┐   ║
+║  <span class="diagram-highlight">┌───────────┐</span>  <span class="diagram-highlight">┌───────────┐</span>   ║
 ║  │   API     │  │   Auth    │   ║
 ║  │ Endpoints │  │  Service  │   ║
-║  └─────┬─────┘  └─────┬─────┘   ║
-║        └────────┬─────┘         ║
+║  <span class="diagram-highlight">└─────┬─────┘</span>  <span class="diagram-highlight">└─────┬─────┘</span>   ║
+║        <span class="diagram-highlight">└────────┬─────┘</span>         ║
 ║         Database Models         ║
 ║         SQLAlchemy ORM          ║
-╚═══════════════╦═════════════════╝
-                ▼
-╔═════════════════════════════════╗
+<span class="diagram-highlight">╚═══════════════╦═════════════════╝</span>
+                <span class="diagram-highlight">▼</span>
+<span class="diagram-highlight">╔═════════════════════════════════╗</span>
 ║      PostgreSQL Database        ║
-╚═══════════════╦═════════════════╝
-                ▼
-╔═════════════════════════════════╗
+<span class="diagram-highlight">╚═══════════════╦═════════════════╝</span>
+                <span class="diagram-highlight">▼</span>
+<span class="diagram-highlight">╔═════════════════════════════════╗</span>
 ║        Celery Workers           ║
-║  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓   ║
-║  ┃  • Site Monitoring        ┃   ║
-║  ┃  • Metrics Collection     ┃   ║
-║  ┃  • Data Aggregation       ┃   ║
-║  ┃  • Status Updates         ┃   ║
-║  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛   ║
-╚═══════════════╦═════════════════╝
-                ▼
-╔═════════════════════════════════╗
+║  <span class="diagram-highlight">┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓</span>   ║
+║  <span class="diagram-highlight">┃</span>  • Site Monitoring        <span class="diagram-highlight">┃</span>   ║
+║  <span class="diagram-highlight">┃</span>  • Metrics Collection     <span class="diagram-highlight">┃</span>   ║
+║  <span class="diagram-highlight">┃</span>  • Data Aggregation       <span class="diagram-highlight">┃</span>   ║
+║  <span class="diagram-highlight">┃</span>  • Status Updates         <span class="diagram-highlight">┃</span>   ║
+║  <span class="diagram-highlight">┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛</span>   ║
+<span class="diagram-highlight">╚═══════════════╦═════════════════╝</span>
+                <span class="diagram-highlight">▼</span>
+<span class="diagram-highlight">╔═════════════════════════════════╗</span>
 ║      Redis (Task Queue)         ║
-╚═══════════════╦═════════════════╝
-                ▼
-╔═════════════════════════════════╗
+<span class="diagram-highlight">╚═══════════════╦═════════════════╝</span>
+                <span class="diagram-highlight">▼</span>
+<span class="diagram-highlight">╔═════════════════════════════════╗</span>
 ║     Celery Beat (Scheduling)    ║
-╚═══════════════╦═════════════════╝
-                ▼
-╔═════════════════════════════════╗
+<span class="diagram-highlight">╚═══════════════╦═════════════════╝</span>
+                <span class="diagram-highlight">▼</span>
+<span class="diagram-highlight">╔═════════════════════════════════╗</span>
 ║         Monitored Sites         ║
 ║                                 ║
 ║    Main     Backup    Staging   ║
-╚═════════════════════════════════╝</pre>
+<span class="diagram-highlight">╚═════════════════════════════════╝</span></pre>
         </div>
         <p>The Kepler monitoring system follows a modern architecture with a Vue.js frontend, FastAPI backend, and a robust worker system for continuous monitoring.</p>
       </div>
@@ -170,11 +185,150 @@
 .about {
   max-width: 100%;
   padding-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 太空背景元素样式 */
+.stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: twinkle 4s infinite ease-in-out;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+.grid-lines {
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: 
+    linear-gradient(to right, var(--primary) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--primary) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: grid-pulse 10s infinite ease-in-out;
+}
+
+@keyframes grid-pulse {
+  0%, 100% { opacity: 0.04; }
+  50% { opacity: 0.09; }
+}
+
+.planet-effect {
+  position: fixed;
+  width: 280px;
+  height: 280px;
+  top: -100px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(42, 157, 143, 0.5) 0%, rgba(58, 134, 255, 0.3) 60%, transparent 100%);
+  border-radius: 50%;
+  box-shadow: inset 20px -20px 40px rgba(255, 255, 255, 0.4),
+              inset -10px 10px 30px rgba(0, 0, 40, 0.6);
+  z-index: -2;
+  animation: planetRotate 60s infinite linear;
+  filter: blur(4px);
+}
+
+@keyframes planetRotate {
+  0% {
+    box-shadow: inset 20px -20px 40px rgba(255, 255, 255, 0.4),
+                inset -10px 10px 30px rgba(0, 0, 40, 0.6);
+  }
+  50% {
+    box-shadow: inset -20px 20px 40px rgba(255, 255, 255, 0.4),
+                inset 10px -10px 30px rgba(0, 0, 40, 0.6);
+  }
+  100% {
+    box-shadow: inset 20px -20px 40px rgba(255, 255, 255, 0.4),
+                inset -10px 10px 30px rgba(0, 0, 40, 0.6);
+  }
+}
+
+.planet-ring {
+  position: fixed;
+  top: -120px;
+  right: -120px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  z-index: -1;
+  overflow: visible;
+  transform: rotateX(75deg) rotateY(15deg);
+  pointer-events: none;
+  animation: orbitRotate 80s infinite linear;
+}
+
+@keyframes orbitRotate {
+  from { transform: rotateX(75deg) rotateY(15deg) rotateZ(0deg); }
+  to { transform: rotateX(75deg) rotateY(15deg) rotateZ(360deg); }
+}
+
+.planet-ring::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  height: 280px;
+  transform: translate(-50%, -50%);
+  border: 10px solid rgba(251, 186, 114, 0.2);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(251, 186, 114, 0.4);
+}
+
+.planet-ring::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240px;
+  height: 240px;
+  transform: translate(-50%, -50%);
+  border: 6px solid rgba(58, 134, 255, 0.2);
+  border-radius: 50%;
+}
+
+.orbital-path {
+  position: fixed;
+  top: 10%;
+  left: -10%;
+  width: 100vh;
+  height: 100vh;
+  border: 1px dashed rgba(58, 134, 255, 0.1);
+  border-radius: 50%;
+  animation: orbit-rotate 150s linear infinite;
+  z-index: -1;
+}
+
+@keyframes orbit-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .about-header {
   text-align: center;
   margin-bottom: 2.5rem;
+  position: relative;
 }
 
 .about-header h1 {
@@ -182,24 +336,43 @@
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.about-header h1::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(to right, var(--primary), var(--primary-light));
+  transform: translateX(-50%);
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(58, 134, 255, 0.6);
 }
 
 .subtitle {
   font-size: 1.25rem;
   color: var(--text-secondary);
   max-width: 600px;
-  margin: 0 auto;
+  margin: 1rem auto 0;
 }
 
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .architecture-section {
   margin-top: 2rem;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .card {
@@ -208,16 +381,51 @@
   box-shadow: var(--shadow);
   padding: 2rem;
   position: relative;
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
   height: 100%;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+}
+
+/* Card space background effect */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(58, 134, 255, 0.03) 0%, transparent 50%, rgba(42, 157, 143, 0.02) 100%);
+  opacity: 0.6;
+  z-index: -1;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  border-color: rgba(58, 134, 255, 0.2);
+}
+
+/* Card glow effect */
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: var(--radius);
+  box-shadow: 0 0 30px rgba(58, 134, 255, 0.15);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: -1;
+}
+
+.card:hover::after {
+  opacity: 1;
 }
 
 .card-icon {
@@ -228,15 +436,39 @@
   align-items: center;
   justify-content: center;
   border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-icon::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover .card-icon::after {
+  opacity: 1;
 }
 
 .card-icon svg {
   width: 36px;
   height: 36px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.card:hover .card-icon svg {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 5px rgba(58, 134, 255, 0.4));
 }
 
 .feature-card .card-icon {
-  background-color: rgba(42, 157, 143, 0.1);
+  background-color: rgba(42, 157, 143, 0.15);
+  box-shadow: 0 0 15px rgba(42, 157, 143, 0.1);
 }
 
 .feature-card .card-icon svg {
@@ -244,7 +476,8 @@
 }
 
 .architecture-card .card-icon {
-  background-color: rgba(87, 115, 153, 0.1);
+  background-color: rgba(87, 115, 153, 0.15);
+  box-shadow: 0 0 15px rgba(87, 115, 153, 0.1);
 }
 
 .architecture-card .card-icon svg {
@@ -263,17 +496,56 @@
   text-align: center;
   font-size: 1.75rem;
   margin-bottom: 1.5rem;
+  position: relative;
+  display: inline-block;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.architecture-card h2::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #577399, transparent);
+  border-radius: 2px;
 }
 
 .architecture-diagram {
   width: 100%;
   overflow-x: auto;
   margin-bottom: 1.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(58, 134, 255, 0.2);
   border-radius: var(--radius);
-  background-color: var(--bg-primary);
+  background-color: rgba(0, 0, 30, 0.05);
   padding: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1), inset 0 0 30px rgba(58, 134, 255, 0.05);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.architecture-diagram:hover {
+  border-color: rgba(58, 134, 255, 0.3);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), inset 0 0 40px rgba(58, 134, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Add subtle background animation */
+.architecture-diagram::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(58, 134, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(42, 157, 143, 0.03) 0%, transparent 50%);
+  opacity: 0.8;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .diagram-text {
@@ -284,18 +556,21 @@
   padding: 1.5rem;
   margin: 0;
   white-space: pre;
+  position: relative;
+  z-index: 1;
+  overflow-x: auto;
+  text-shadow: 0 0 1px rgba(58, 134, 255, 0.2);
 }
 
-/* Additional explanation text */
-.architecture-card p {
-  text-align: center;
-  font-size: 1.1rem;
-  max-width: 800px;
-  margin: 1rem auto 0;
+/* Add subtle glow to special symbols */
+.diagram-text .diagram-highlight {
+  color: var(--primary);
+  text-shadow: 0 0 3px rgba(58, 134, 255, 0.4);
 }
 
 .tech-card .card-icon {
-  background-color: rgba(233, 196, 106, 0.1);
+  background-color: rgba(233, 196, 106, 0.15);
+  box-shadow: 0 0 15px rgba(233, 196, 106, 0.1);
 }
 
 .tech-card .card-icon svg {
@@ -303,7 +578,8 @@
 }
 
 .metrics-card .card-icon {
-  background-color: rgba(244, 162, 97, 0.1);
+  background-color: rgba(244, 162, 97, 0.15);
+  box-shadow: 0 0 15px rgba(244, 162, 97, 0.1);
 }
 
 .metrics-card .card-icon svg {
@@ -316,6 +592,19 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary);
+  position: relative;
+  display: inline-block;
+}
+
+.card h2::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(to right, currentColor, transparent);
+  border-radius: 2px;
 }
 
 .card p {
@@ -332,6 +621,7 @@ code {
   font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
   font-size: 0.9em;
   color: var(--primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .tech-grid {
@@ -347,6 +637,19 @@ code {
   margin-bottom: 0.75rem;
   color: var(--text-primary);
   font-weight: 600;
+  position: relative;
+  display: inline-block;
+}
+
+.tech-item h3::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 70%;
+  height: 1px;
+  background: linear-gradient(to right, currentColor, transparent);
+  border-radius: 1px;
 }
 
 .tech-item ul {
@@ -357,6 +660,13 @@ code {
 .tech-item li {
   margin-bottom: 0.5rem;
   color: var(--text-secondary);
+  transition: transform 0.3s ease;
+  position: relative;
+}
+
+.tech-item li:hover {
+  transform: translateX(3px);
+  color: var(--primary);
 }
 
 .metrics-list {
@@ -368,6 +678,11 @@ code {
 .metric-item {
   display: flex;
   align-items: flex-start;
+  transition: transform 0.3s ease;
+}
+
+.metric-item:hover {
+  transform: translateX(5px);
 }
 
 .metric-bullet {
@@ -378,18 +693,31 @@ code {
   margin-top: 0.5rem;
   margin-right: 1rem;
   flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(58, 134, 255, 0.4);
+  animation: pulse 3s infinite alternate;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 4px rgba(58, 134, 255, 0.3); }
+  100% { box-shadow: 0 0 12px rgba(58, 134, 255, 0.6); }
 }
 
 .metric-item:nth-child(2) .metric-bullet {
   background-color: var(--secondary);
+  box-shadow: 0 0 8px rgba(233, 196, 106, 0.4);
+  animation-delay: 0.5s;
 }
 
 .metric-item:nth-child(3) .metric-bullet {
   background-color: var(--accent);
+  box-shadow: 0 0 8px rgba(244, 162, 97, 0.4);
+  animation-delay: 1s;
 }
 
 .metric-item:nth-child(4) .metric-bullet {
   background-color: var(--success);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+  animation-delay: 1.5s;
 }
 
 .metric-item h3 {
@@ -397,6 +725,11 @@ code {
   margin: 0 0 0.25rem 0;
   color: var(--text-primary);
   font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.metric-item:hover h3 {
+  color: var(--primary);
 }
 
 .metric-item p {
@@ -410,11 +743,20 @@ code {
   text-align: center;
   color: var(--text-secondary);
   font-size: 0.9rem;
+  position: relative;
+  z-index: 1;
 }
 
 .heart {
   color: #e74c3c;
   font-size: 1.1rem;
+  display: inline-block;
+  animation: heartbeat 1.5s infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
 }
 
 .version {
@@ -448,5 +790,45 @@ code {
   .diagram-text {
     font-size: 0.75rem;
   }
+  
+  .planet-effect, .planet-ring {
+    display: none;
+  }
+}
+
+/* Additional explanation text */
+.architecture-card p {
+  text-align: center;
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 1rem auto 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+.architecture-card p::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--primary), transparent);
+  opacity: 0.5;
+}
+
+/* Add floating animation to tech items on hover */
+@keyframes float-item {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.tech-item li:hover {
+  transform: translateX(3px);
+  color: var(--primary);
+  animation: float-item 2s ease-in-out infinite;
 }
 </style> 

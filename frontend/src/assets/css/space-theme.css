@@ -1,0 +1,547 @@
+/* Space Theme Styles for Dashboard Components */
+
+/* Card styling */
+.card, .stat-card, .chart-card, .alert-card, .info-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+}
+
+/* Card space background effect */
+.card::before, 
+.stat-card::before, 
+.chart-card::before, 
+.alert-card::before, 
+.info-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(58, 134, 255, 0.03) 0%, transparent 50%, rgba(42, 157, 143, 0.02) 100%);
+  opacity: 0.6;
+  z-index: -1;
+}
+
+.card:hover, 
+.stat-card:hover, 
+.chart-card:hover, 
+.alert-card:hover, 
+.info-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  border-color: rgba(58, 134, 255, 0.2);
+}
+
+/* Card glow effect */
+.card::after, 
+.stat-card::after, 
+.chart-card::after, 
+.alert-card::after, 
+.info-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: var(--radius);
+  box-shadow: 0 0 30px rgba(58, 134, 255, 0.15);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: -1;
+}
+
+.card:hover::after, 
+.stat-card:hover::after, 
+.chart-card:hover::after, 
+.alert-card:hover::after, 
+.info-card:hover::after {
+  opacity: 1;
+}
+
+/* Headers */
+.card-header, .dashboard-header, .section-header {
+  position: relative;
+}
+
+.card-header h2, 
+.dashboard-header h1, 
+.section-header h2 {
+  position: relative;
+  display: inline-block;
+}
+
+.card-header h2::after, 
+.section-header h2::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(to right, var(--primary), transparent);
+  border-radius: 2px;
+}
+
+/* Buttons */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.7s ease;
+  z-index: -1;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(58, 134, 255, 0.3);
+}
+
+/* Tabs styling */
+.tabs, .site-tabs {
+  position: relative;
+  z-index: 1;
+}
+
+.tab, .site-tab {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab::before, .site-tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(58, 134, 255, 0.05), transparent);
+  transition: left 0.5s ease;
+  z-index: -1;
+}
+
+.tab:hover::before, .site-tab:hover::before {
+  left: 100%;
+}
+
+.tab.active, .site-tab.active {
+  position: relative;
+}
+
+.tab.active::after, .site-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(to right, var(--primary), var(--primary-light));
+  box-shadow: 0 0 10px rgba(58, 134, 255, 0.4);
+}
+
+/* Status indicators */
+.status-indicator {
+  position: relative;
+  box-shadow: 0 0 10px rgba(58, 134, 255, 0.3);
+}
+
+.status-indicator.success {
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+}
+
+.status-indicator.warning {
+  box-shadow: 0 0 10px rgba(251, 186, 114, 0.4);
+}
+
+.status-indicator.error {
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+}
+
+/* Dashboard elements hover effect */
+.dashboard-element:hover {
+  transform: translateY(-2px);
+  transition: transform 0.3s ease;
+}
+
+/* Modal styling */
+.modal-container {
+  backdrop-filter: blur(8px);
+}
+
+.modal-content {
+  border: 1px solid rgba(58, 134, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 30px rgba(58, 134, 255, 0.2);
+  background: var(--bg-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(58, 134, 255, 0.03) 0%, transparent 50%, rgba(42, 157, 143, 0.02) 100%);
+  opacity: 0.6;
+  z-index: -1;
+}
+
+/* Charts styling */
+.chart-container {
+  position: relative;
+  padding: 1rem;
+  border-radius: var(--radius);
+  transition: all 0.3s ease;
+  z-index: 1;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(58, 134, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(42, 157, 143, 0.03) 0%, transparent 40%);
+  border-radius: var(--radius);
+  z-index: -1;
+  opacity: 0.5;
+}
+
+.chart-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 380px;
+}
+
+.chart-card .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.chart-wrapper {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  min-height: 250px;
+  overflow: visible;
+}
+
+/* Chart tooltip styling */
+.chart-tooltip {
+  background-color: rgba(0, 0, 20, 0.8) !important;
+  border: 1px solid rgba(58, 134, 255, 0.3) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 15px rgba(58, 134, 255, 0.2) !important;
+  backdrop-filter: blur(5px) !important;
+  padding: 0.75rem !important;
+}
+
+/* Chart grid lines */
+.chart-grid-line {
+  stroke: rgba(58, 134, 255, 0.05) !important;
+}
+
+/* Chart point styling */
+.chart-point {
+  stroke-width: 2px !important;
+  transition: all 0.3s ease !important;
+}
+
+.chart-point:hover {
+  stroke-width: 4px !important;
+  transform: scale(1.5) !important;
+  filter: drop-shadow(0 0 5px rgba(58, 134, 255, 0.6)) !important;
+}
+
+/* Period selector styling */
+.chart-period-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.period-button {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.period-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(58, 134, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+  z-index: 0;
+}
+
+.period-button:hover::before {
+  left: 100%;
+}
+
+.period-button.active {
+  background: rgba(58, 134, 255, 0.1);
+  color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 10px rgba(58, 134, 255, 0.2);
+}
+
+/* Stats cards space styling */
+.stats-grid {
+  display: grid;
+  gap: 1rem;
+  position: relative;
+}
+
+.stat-card {
+  padding: 1.25rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+  background: linear-gradient(to right, var(--primary), var(--primary-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+}
+
+.stat-value::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 40%;
+  height: 2px;
+  background: linear-gradient(to right, var(--primary), transparent);
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.stat-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.stat-trend.positive {
+  color: var(--success);
+}
+
+.stat-trend.negative {
+  color: var(--danger);
+}
+
+.stat-trend-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Refresh button animation */
+@keyframes pulse-rotate {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1) rotate(180deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.refresh-button {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.refresh-button:hover {
+  transform: scale(1.1);
+}
+
+.refresh-button.loading {
+  animation: pulse-rotate 1.5s infinite linear;
+}
+
+/* Availability chart styling */
+.availability-chart {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+.hour-cell {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.hour-cell:hover {
+  transform: scale(1.1);
+  z-index: 2;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.hour-cell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.hour-cell:hover::before {
+  opacity: 1;
+}
+
+.response-times-card {
+  min-height: 420px;
+}
+
+.response-times-card .chart-wrapper {
+  min-height: 300px;
+  padding-bottom: 1.5rem;
+}
+
+.response-times-card canvas {
+  max-height: none !important;
+  margin-bottom: 0.5rem;
+}
+
+.chart-container > * {
+  z-index: 2;
+}
+
+.card-body {
+  overflow: visible;
+}
+
+@media (max-width: 1200px) {
+  .response-times-card {
+    min-height: 380px;
+  }
+  
+  .response-times-card .chart-wrapper {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .response-times-card {
+    min-height: 350px;
+  }
+  
+  .response-times-card .chart-wrapper {
+    min-height: 230px;
+  }
+}
+
+/* 修复Response Times图表容器 */
+.chart-card .chart-container {
+  padding: 0; /* 移除可能干扰图表显示的padding */
+}
+
+/* 确保LineChart组件正确显示 */
+.response-times-card .chart-container canvas {
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* 为LineChart组件添加额外的容器空间 */
+.line-chart-container {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  position: relative;
+}
+
+/* 防止LineChart被CSS干扰 */
+canvas.chartjs-render-monitor {
+  display: block !important;
+  height: auto !important;
+  min-height: 250px;
+}
+
+/* 限制图表Y轴高度 */
+.chart-wrapper canvas {
+  height: 290px !important;
+  max-height: 290px !important;
+  width: 100% !important;
+}
+
+/* 确保Y轴标签可见性 */
+.response-times-card .chart-container {
+  padding: 1rem 0.5rem 0.5rem 1rem !important;
+}
+
+/* 确保图表有合适的边距 */
+.response-times-card .card-body {
+  padding: 0.75rem !important;
+} 

@@ -45,6 +45,14 @@ const routes = [
     meta: {
       requiresAuth: false
     }
+  },
+  {
+    path: '/cursor-presentation',
+    name: 'cursor-presentation',
+    component: () => import(/* webpackChunkName: "cursor-presentation" */ '../views/CursorPresentationView.vue'),
+    meta: {
+      requiresAuth: false
+    }
   }
 ]
 

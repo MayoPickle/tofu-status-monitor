@@ -129,8 +129,11 @@ export default {
 }
 
 .chart-container {
-  height: 350px;
+  min-height: 350px;
+  height: 100%;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .limited-access-message {

@@ -118,48 +118,50 @@
   </BaseCard>
   
   <!-- Tooltip portal (outside BaseCard) -->
-  <div v-if="hoveredCell !== null" class="tooltip-portal" :style="getTooltipStyle()">
-    <div class="cell-tooltip" :class="getTooltipPositionClass(hoveredCell)">
-      <template v-if="hoveredCell === 0">
-        <div class="tooltip-time">Status Legend</div>
-        <div class="tooltip-stats">
-          <div class="tooltip-stat">
-            <span class="tooltip-label status-good-text">Good:</span>
-            <span class="tooltip-value">Success &gt; 95%, Response &lt; 3000ms</span>
+  <Teleport to="body">
+    <div v-if="hoveredCell !== null" class="tooltip-portal" :style="getTooltipStyle()">
+      <div class="cell-tooltip" :class="getTooltipPositionClass(hoveredCell)">
+        <template v-if="hoveredCell === 0">
+          <div class="tooltip-time">Status Legend</div>
+          <div class="tooltip-stats">
+            <div class="tooltip-stat">
+              <span class="tooltip-label status-good-text">Good:</span>
+              <span class="tooltip-value">Success &gt; 95%, Response &lt; 3000ms</span>
+            </div>
+            <div class="tooltip-stat">
+              <span class="tooltip-label status-warning-text">Warning:</span>
+              <span class="tooltip-value">Success &gt; 95%, Response &gt; 3000ms</span>
+            </div>
+            <div class="tooltip-stat">
+              <span class="tooltip-label status-error-text">Error:</span>
+              <span class="tooltip-value">Success &lt; 95%</span>
+            </div>
           </div>
-          <div class="tooltip-stat">
-            <span class="tooltip-label status-warning-text">Warning:</span>
-            <span class="tooltip-value">Success &gt; 95%, Response &gt; 3000ms</span>
+        </template>
+        <template v-else>
+          <div class="tooltip-time">{{ getTooltipTime(hoveredCell - 1) }}</div>
+          <div class="tooltip-stats">
+            <div class="tooltip-stat">
+              <span class="tooltip-label">Success Rate:</span>
+              <span class="tooltip-value" :class="getSuccessRateClass(hourlyStatus[hoveredCell - 1].successRate)">
+                {{ hourlyStatus[hoveredCell - 1].successRate.toFixed(1) }}%
+              </span>
+            </div>
+            <div class="tooltip-stat">
+              <span class="tooltip-label">Response Time:</span>
+              <span class="tooltip-value" :class="getResponseTimeClass(hourlyStatus[hoveredCell - 1].responseTime)">
+                {{ hourlyStatus[hoveredCell - 1].responseTime.toFixed(0) }}ms
+              </span>
+            </div>
+            <div class="tooltip-stat">
+              <span class="tooltip-label">Requests:</span>
+              <span class="tooltip-value">{{ hourlyStatus[hoveredCell - 1].requestCount }}</span>
+            </div>
           </div>
-          <div class="tooltip-stat">
-            <span class="tooltip-label status-error-text">Error:</span>
-            <span class="tooltip-value">Success &lt; 95%</span>
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <div class="tooltip-time">{{ getTooltipTime(hoveredCell - 1) }}</div>
-        <div class="tooltip-stats">
-          <div class="tooltip-stat">
-            <span class="tooltip-label">Success Rate:</span>
-            <span class="tooltip-value" :class="getSuccessRateClass(hourlyStatus[hoveredCell - 1].successRate)">
-              {{ hourlyStatus[hoveredCell - 1].successRate.toFixed(1) }}%
-            </span>
-          </div>
-          <div class="tooltip-stat">
-            <span class="tooltip-label">Response Time:</span>
-            <span class="tooltip-value" :class="getResponseTimeClass(hourlyStatus[hoveredCell - 1].responseTime)">
-              {{ hourlyStatus[hoveredCell - 1].responseTime.toFixed(0) }}ms
-            </span>
-          </div>
-          <div class="tooltip-stat">
-            <span class="tooltip-label">Requests:</span>
-            <span class="tooltip-value">{{ hourlyStatus[hoveredCell - 1].requestCount }}</span>
-          </div>
-        </div>
-      </template>
+        </template>
+      </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script>
@@ -197,8 +199,8 @@ export default {
       
       // Store cell position for tooltip positioning
       cellPosition.value = {
-        top: cellRect.top + window.scrollY,
-        left: cellRect.left + window.scrollX,
+        top: cellRect.top,
+        left: cellRect.left,
         width: cellRect.width,
         height: cellRect.height,
         centerX: cellRect.left + (cellRect.width / 2),
@@ -449,10 +451,10 @@ export default {
 <style scoped>
 .hourly-availability-card {
   overflow: visible;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background-color: white;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background-color: var(--bg-card);
   width: 100%;
   max-width: 100%;
 }
@@ -462,8 +464,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
 }
 
 .header-content {
@@ -473,13 +475,13 @@ export default {
 .card-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .card-subtitle {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-top: 0.25rem;
 }
 
@@ -489,8 +491,8 @@ export default {
   flex-wrap: wrap;
   gap: 1.25rem;
   padding: 1.5rem;
-  border-bottom: 1px solid #f3f4f6;
-  background-color: #fcfcfd;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
 }
 
 .summary-stat-card {
@@ -499,9 +501,9 @@ export default {
   gap: 0.75rem;
   padding: 1rem;
   border-radius: 0.5rem;
-  background-color: white;
-  border: 1px solid #f3f4f6;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
   min-width: 180px;
   flex: 1;
 }
@@ -513,23 +515,23 @@ export default {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #f3f4f6;
-  color: #4b5563;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
 }
 
 .success-icon {
-  background-color: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
+  background-color: rgba(var(--success-rgb, 34, 197, 94), 0.1);
+  color: var(--success);
 }
 
 .response-icon {
-  background-color: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background-color: rgba(var(--primary-rgb, 59, 130, 246), 0.1);
+  color: var(--primary);
 }
 
 .requests-icon {
-  background-color: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
+  background-color: rgba(var(--accent-rgb, 99, 102, 241), 0.1);
+  color: var(--accent);
 }
 
 .summary-content {
@@ -540,13 +542,13 @@ export default {
 .summary-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 
 .summary-label {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-top: 0.25rem;
 }
 
@@ -568,14 +570,14 @@ export default {
 
 .timeline-label {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .timeline-line {
   flex: 1;
   height: 2px;
-  background: linear-gradient(to right, #e5e7eb, #9ca3af);
+  background: linear-gradient(to right, var(--border-color), var(--text-secondary));
   margin: 0 0.5rem;
 }
 
@@ -597,7 +599,7 @@ export default {
   width: 60px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--text-secondary);
   flex-shrink: 0;
   text-align: right;
   padding-right: 1rem;
@@ -606,7 +608,7 @@ export default {
 }
 
 .grid-label:hover {
-  color: #2563eb;
+  color: var(--primary);
 }
 
 .hour-labels {
@@ -618,7 +620,7 @@ export default {
   min-width: 30px;
   height: 20px;
   font-size: 0.7rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   text-align: center;
   margin: 0 1px;
 }
@@ -632,55 +634,55 @@ export default {
   position: relative;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .grid-cell:hover {
   transform: translateY(-3px);
   z-index: 999;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
-/* Status Colors - Using hardcoded values instead of CSS variables */
+/* Status Colors - Using CSS variables instead of hardcoded values */
 .status-good {
-  background-color: #22c55e; /* Green */
-  border: 1px solid rgba(34, 197, 94, 0.5);
+  background-color: var(--success);
+  border: 1px solid rgba(var(--success-rgb, 34, 197, 94), 0.5);
 }
 
 .status-warning {
-  background-color: #f59e0b; /* Yellow */
-  border: 1px solid rgba(245, 158, 11, 0.5);
+  background-color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb, 245, 158, 11), 0.5);
 }
 
 .status-error {
-  background-color: #ef4444; /* Red */
-  border: 1px solid rgba(239, 68, 68, 0.5);
+  background-color: var(--danger);
+  border: 1px solid rgba(var(--danger-rgb, 239, 68, 68), 0.5);
 }
 
 .status-unknown {
-  background-color: #e5e7eb; /* Light gray */
-  border: 1px dashed #9ca3af; /* Gray dashed border */
+  background-color: var(--border-color);
+  border: 1px dashed var(--text-secondary);
 }
 
 /* Legend Colors */
 .status-good-legend {
-  background-color: #22c55e; /* Green */
-  border: 1px solid rgba(34, 197, 94, 0.5);
+  background-color: var(--success);
+  border: 1px solid rgba(var(--success-rgb, 34, 197, 94), 0.5);
 }
 
 .status-warning-legend {
-  background-color: #f59e0b; /* Yellow */
-  border: 1px solid rgba(245, 158, 11, 0.5);
+  background-color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb, 245, 158, 11), 0.5);
 }
 
 .status-error-legend {
-  background-color: #ef4444; /* Red */
-  border: 1px solid rgba(239, 68, 68, 0.5);
+  background-color: var(--danger);
+  border: 1px solid rgba(var(--danger-rgb, 239, 68, 68), 0.5);
 }
 
 .status-unknown-legend {
-  background-color: #e5e7eb; /* Light gray */
-  border: 1px dashed #9ca3af; /* Gray dashed border */
+  background-color: var(--border-color); 
+  border: 1px dashed var(--text-secondary);
 }
 
 /* Tooltip Portal */
@@ -688,20 +690,27 @@ export default {
   position: fixed;
   z-index: 9999;
   pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
 
 /* Tooltip */
 .cell-tooltip {
   position: relative;
   width: 180px;
-  background-color: white;
-  border: 1px solid #e5e7eb;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0.75rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   z-index: 9999;
   pointer-events: none;
   --arrow-left-pos: 90px; /* Default centered arrow */
+  opacity: 1;
+  visibility: visible;
+  transform: translateZ(0);
+  backdrop-filter: blur(0);
+  will-change: transform, opacity;
+  transition: opacity 0.15s ease-in-out;
 }
 
 /* Arrow for tooltip */
@@ -717,7 +726,7 @@ export default {
   top: 100%;
   left: var(--arrow-left-pos);
   transform: translateX(-50%);
-  border-color: white transparent transparent transparent;
+  border-color: var(--bg-card) transparent transparent transparent;
 }
 
 /* Bottom tooltip arrow (pointing up) */
@@ -725,7 +734,7 @@ export default {
   bottom: 100%;
   left: var(--arrow-left-pos);
   transform: translateX(-50%);
-  border-color: transparent transparent white transparent;
+  border-color: transparent transparent var(--bg-card) transparent;
 }
 
 /* Leftmost tooltip arrow (pointing left) */
@@ -733,7 +742,7 @@ export default {
   top: 50%;
   left: -16px;
   transform: translateY(-50%);
-  border-color: transparent white transparent transparent;
+  border-color: transparent var(--bg-card) transparent transparent;
 }
 
 /* Tooltip content */
@@ -741,15 +750,15 @@ export default {
   font-weight: 600;
   font-size: 0.85rem;
   margin-bottom: 0.75rem;
-  color: #111827;
+  color: var(--text-primary);
   text-align: center;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .tooltip-stats {
   font-size: 0.8rem;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -760,26 +769,26 @@ export default {
 }
 
 .tooltip-label {
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .tooltip-value {
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 /* Footer */
 .grid-footer {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
   padding: 1.25rem 1.5rem;
-  background-color: #f9fafb;
+  background-color: var(--bg-secondary);
 }
 
 /* Legend */
 .legend-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--text-secondary);
   margin: 0 0 0.75rem 0;
 }
 
@@ -793,7 +802,7 @@ export default {
   display: flex;
   align-items: center;
   font-size: 0.8rem;
-  color: #4b5563;
+  color: var(--text-secondary);
   margin-right: 1rem;
 }
 
@@ -807,40 +816,40 @@ export default {
 
 /* Status text colors */
 .status-good-text {
-  color: #22c55e;
+  color: var(--success);
   font-weight: 600;
 }
 
 .status-warning-text {
-  color: #f59e0b;
+  color: var(--accent);
   font-weight: 600;
 }
 
 .status-error-text {
-  color: #ef4444;
+  color: var(--danger);
   font-weight: 600;
 }
 
 .status-unknown-text {
-  color: #9ca3af;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
 /* Status colors in metrics */
 .excellent {
-  color: #16a34a;
+  color: var(--success);
 }
 
 .good {
-  color: #2563eb;
+  color: var(--primary);
 }
 
 .average {
-  color: #d97706;
+  color: var(--accent);
 }
 
 .poor {
-  color: #dc2626;
+  color: var(--danger);
 }
 
 .refresh-btn {
@@ -848,9 +857,9 @@ export default {
   align-items: center;
   gap: 0.375rem;
   font-weight: 500;
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  color: #4b5563;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
   padding: 0.375rem 0.75rem;
   font-size: 0.85rem;
   border-radius: 6px;
@@ -858,8 +867,8 @@ export default {
 }
 
 .refresh-btn:hover {
-  background-color: #f9fafb;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--shadow);
   transform: translateY(-1px);
 }
 

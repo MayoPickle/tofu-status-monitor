@@ -3,24 +3,22 @@
     <div class="app-container">
       <!-- Left Sidebar Navigation -->
       <aside class="sidebar">
-        <!-- Space theme elements -->
-        <div class="space-elements">
-          <div class="star-particle" v-for="n in 15" :key="`star-${n}`" :style="{ 
-            top: Math.random() * 100 + '%', 
-            left: Math.random() * 100 + '%',
-            width: (Math.random() * 2 + 1) + 'px',
-            height: (Math.random() * 2 + 1) + 'px',
-            animationDelay: Math.random() * 4 + 's'
-          }"></div>
-          <div class="orbit-line"></div>
-        </div>
-        
         <div class="sidebar-header">
           <div class="logo">
             <svg viewBox="0 0 24 24" class="logo-icon">
               <path d="M12,2L1,21H23L12,2M12,6.7L16,13H8L12,6.7Z" />
             </svg>
             <h1>Kepler</h1>
+          </div>
+          <!-- Add stars for space theme -->
+          <div class="stars">
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
           </div>
         </div>
         <nav class="sidebar-nav">
@@ -47,6 +45,12 @@
               <svg viewBox="0 0 24 24"><path d="M13,9H11V7H13M13,17H11V11H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg>
             </span>
             <span>About</span>
+          </router-link>
+          <router-link to="/cursor-presentation" class="nav-item">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 7V21H18V7H4M4 5H18C19.11 5 20 5.89 20 7V21C20 22.11 19.11 23 18 23H4C2.89 23 2 22.11 2 21V7C2 5.89 2.89 5 4 5M15.25 14C15.25 15.27 14.71 16.34 13.83 17.01L14.92 18.1C15.44 17.9 15.91 17.6 16.32 17.2C17.21 16.31 17.75 15.24 17.75 14C17.75 12.76 17.21 11.69 16.32 10.8C15.91 10.4 15.44 10.1 14.92 9.9L13.83 11C14.71 11.67 15.25 12.73 15.25 14M11.75 14C11.75 12.73 12.29 11.67 13.17 11L12.08 9.9C11.56 10.1 11.09 10.4 10.68 10.8C9.79 11.69 9.25 12.76 9.25 14C9.25 15.24 9.79 16.31 10.68 17.2C11.09 17.6 11.56 17.9 12.08 18.1L13.17 17C12.29 16.34 11.75 15.27 11.75 14M12.5 5.5L14 4L15.5 5.5H12.5Z" /></svg>
+            </span>
+            <span>Cursor Presentation</span>
           </router-link>
         </nav>
         
@@ -275,24 +279,7 @@ body {
   overflow-y: auto;
   z-index: 10;
   border-right: 1px solid var(--border-color);
-  transition: width 0.3s ease, background-color 0.3s ease;
-  position: relative;
-}
-
-/* Space background for sidebar */
-.sidebar::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    radial-gradient(circle at 80% 10%, rgba(42, 157, 143, 0.08) 0%, transparent 30%),
-    radial-gradient(circle at 10% 90%, rgba(58, 134, 255, 0.06) 0%, transparent 30%);
-  opacity: 0.6;
-  z-index: -1;
-  pointer-events: none;
+  transition: width 0.3s ease;
 }
 
 .sidebar-header {
@@ -332,6 +319,82 @@ body {
   animation: rotate-ring 20s linear infinite;
 }
 
+/* Add tiny stars */
+.sidebar-header .stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -2;
+  overflow: hidden;
+}
+
+.sidebar-header .star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: twinkle 4s infinite ease-in-out;
+}
+
+.sidebar-header .star:nth-child(1) {
+  top: 25%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.sidebar-header .star:nth-child(2) {
+  top: 35%;
+  left: 30%;
+  width: 1px;
+  height: 1px;
+  animation-delay: 0.5s;
+}
+
+.sidebar-header .star:nth-child(3) {
+  top: 65%;
+  left: 10%;
+  width: 1.5px;
+  height: 1.5px;
+  animation-delay: 1s;
+}
+
+.sidebar-header .star:nth-child(4) {
+  top: 75%;
+  left: 35%;
+  animation-delay: 1.5s;
+}
+
+.sidebar-header .star:nth-child(5) {
+  top: 20%;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+  animation-delay: 2s;
+}
+
+.sidebar-header .star:nth-child(6) {
+  top: 45%;
+  left: 20%;
+  animation-delay: 2.5s;
+}
+
+.sidebar-header .star:nth-child(7) {
+  top: 55%;
+  left: 55%;
+  width: 1.5px;
+  height: 1.5px;
+  animation-delay: 3s;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.2); }
+}
+
 @keyframes rotate-ring {
   from { transform: rotateX(70deg) rotateZ(0deg); }
   to { transform: rotateX(70deg) rotateZ(360deg); }
@@ -343,32 +406,27 @@ body {
   position: relative;
 }
 
+/* Add glow halo effect */
+.logo::before {
+  content: "";
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  left: -4px;
+  top: -4px;
+  background: radial-gradient(circle, rgba(58, 134, 255, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(5px);
+  z-index: 0;
+}
+
 .logo-icon {
   width: 32px;
   height: 32px;
   margin-right: 0.75rem;
   fill: var(--primary);
-  filter: drop-shadow(0 2px 8px rgba(58, 134, 255, 0.5));
-  animation: pulse 3s infinite ease-in-out;
   position: relative;
   z-index: 1;
-}
-
-/* Add glow effect to the icon */
-.logo-icon path {
-  fill: var(--primary);
-  filter: drop-shadow(0 0 5px var(--primary));
-}
-
-@keyframes pulse {
-  0%, 100% {
-    filter: drop-shadow(0 2px 4px rgba(58, 134, 255, 0.4));
-    transform: scale(1);
-  }
-  50% {
-    filter: drop-shadow(0 4px 12px rgba(58, 134, 255, 0.7));
-    transform: scale(1.05);
-  }
 }
 
 .sidebar-header h1 {
@@ -377,7 +435,6 @@ body {
   font-weight: 600;
   color: var(--primary);
   letter-spacing: -0.5px;
-  text-shadow: 0 0 10px rgba(58, 134, 255, 0.3);
   position: relative;
   z-index: 1;
 }
@@ -419,54 +476,6 @@ body {
     radial-gradient(ellipse at 10% 20%, rgba(58, 134, 255, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 90% 80%, rgba(42, 157, 143, 0.06) 0%, transparent 60%);
   z-index: -2;
-  pointer-events: none;
-}
-
-/* Add meteor effect */
-@keyframes meteor {
-  0% {
-    transform: translateX(0) translateY(0) rotate(45deg);
-    opacity: 1;
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-500px) translateY(500px) rotate(45deg);
-    opacity: 0;
-  }
-}
-
-.sidebar::after {
-  content: "";
-  position: absolute;
-  top: -100px;
-  right: -100px;
-  width: 200px;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4));
-  box-shadow: 0 0 10px 1px rgba(255, 255, 255, 0.2);
-  transform: rotate(45deg);
-  animation: meteor 8s linear infinite;
-  animation-delay: 3s;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Add a second, smaller meteor */
-.sidebar::before {
-  content: "";
-  position: absolute;
-  top: 30%;
-  right: -50px;
-  width: 100px;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4));
-  box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.1);
-  transform: rotate(45deg);
-  animation: meteor 12s linear infinite;
-  animation-delay: 8s;
-  z-index: 0;
   pointer-events: none;
 }
 
@@ -633,33 +642,18 @@ body {
   padding: 1.5rem;
   border-top: 1px solid var(--border-color);
   margin-top: auto;
-  position: relative;
-  backdrop-filter: blur(8px);
-}
-
-.sidebar-footer::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 5%;
-  right: 5%;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--primary), transparent);
-  opacity: 0.2;
 }
 
 .user-info {
   display: flex;
   align-items: center;
   margin-bottom: 1rem;
-  position: relative;
-  z-index: 1;
 }
 
 .user-avatar {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  width: 40px;
+  height: 40px;
+  background-color: var(--primary);
   color: white;
   border-radius: var(--radius-full);
   display: flex;
@@ -668,35 +662,7 @@ body {
   font-weight: 600;
   margin-right: 0.75rem;
   font-size: 0.875rem;
-  box-shadow: 0 3px 8px rgba(58, 134, 255, 0.4);
-  position: relative;
-  overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-}
-
-.user-avatar::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-}
-
-.user-avatar::after {
-  content: "";
-  position: absolute;
-  width: 150%;
-  height: 150%;
-  top: -25%;
-  left: -25%;
-  background: linear-gradient(to bottom right, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transform: rotate(45deg);
-  animation: shimmer 3s infinite linear;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) rotate(45deg); }
+  box-shadow: 0 2px 6px rgba(58, 134, 255, 0.3);
 }
 
 .user-details {
@@ -709,25 +675,12 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .user-role {
   font-size: 0.8rem;
-  color: var(--primary);
+  color: var(--gray);
   text-transform: capitalize;
-  opacity: 0.9;
-  position: relative;
-}
-
-.user-role::after {
-  content: "";
-  position: absolute;
-  height: 1px;
-  background: linear-gradient(to right, var(--primary), transparent);
-  width: 100%;
-  left: 0;
-  bottom: -2px;
 }
 
 .auth-actions {
@@ -740,56 +693,35 @@ body {
   border-radius: var(--radius);
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  transition: var(--transition);
   font-weight: 500;
   border: none;
   font-size: 0.9rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.login-button::before, .logout-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-}
-
-.login-button:hover::before, .logout-button:hover::before {
-  transform: translateX(100%);
 }
 
 .login-button {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background-color: var(--primary);
   color: white;
   text-decoration: none;
   box-shadow: 0 2px 6px rgba(58, 134, 255, 0.3);
 }
 
 .login-button:hover {
-  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  background-color: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(58, 134, 255, 0.4);
+  box-shadow: 0 4px 8px rgba(58, 134, 255, 0.4);
 }
 
 .logout-button {
   background-color: transparent;
   color: var(--gray-dark);
   border: 1px solid var(--gray-light);
-  backdrop-filter: blur(4px);
 }
 
 .logout-button:hover {
-  background-color: rgba(255, 0, 110, 0.08);
+  background-color: rgba(255, 0, 110, 0.05);
   color: var(--danger);
   border-color: var(--danger);
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(255, 0, 110, 0.15);
 }
 
 /* Content Styles */
@@ -802,7 +734,7 @@ body {
 }
 
 .content-header {
-  padding: 1rem 2rem;
+  padding: 1.25rem 2rem;
   background-color: var(--bg-secondary);
   backdrop-filter: blur(8px);
   box-shadow: var(--shadow-sm);
@@ -811,14 +743,47 @@ body {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add subtle space background to header */
+.content-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 80% 20%, rgba(58, 134, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(42, 157, 143, 0.04) 0%, transparent 40%);
+  opacity: 0.7;
+  z-index: -1;
 }
 
 .page-title h1 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.5px;
+  position: relative;
+  display: inline-block;
+}
+
+/* Add underline glow effect to page title */
+.page-title h1::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 30%;
+  height: 2px;
+  background: linear-gradient(to right, var(--primary), transparent);
+  border-radius: var(--radius);
+  opacity: 0.8;
+  box-shadow: 0 0 8px rgba(58, 134, 255, 0.5);
 }
 
 .header-actions {
@@ -828,55 +793,27 @@ body {
 }
 
 .theme-toggle {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  transition: var(--transition);
+  background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
-  position: relative;
-  overflow: hidden;
-}
-
-.theme-toggle::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(58, 134, 255, 0.1) 0%, transparent 60%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
 }
 
 .theme-toggle:hover {
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  transform: rotate(15deg) scale(1.1);
-  box-shadow: 0 0 15px rgba(58, 134, 255, 0.2);
-  border-color: rgba(58, 134, 255, 0.3);
-}
-
-.theme-toggle:hover::before {
-  opacity: 1;
+  background-color: var(--bg-secondary);
+  transform: rotate(15deg);
 }
 
 .theme-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   fill: var(--text-secondary);
-  transition: all 0.3s ease;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
-}
-
-.theme-toggle:hover .theme-icon {
-  fill: var(--primary);
-  transform: scale(1.1);
-  filter: drop-shadow(0 0 4px rgba(58, 134, 255, 0.4));
 }
 
 .content-wrapper {
@@ -884,6 +821,23 @@ body {
   overflow-y: auto;
   padding: 2rem;
   background-color: var(--bg-body);
+  position: relative;
+}
+
+/* Add subtle grid to content background */
+.content-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(to right, rgba(58, 134, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(58, 134, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  z-index: -1;
+  pointer-events: none;
 }
 
 footer {
@@ -894,6 +848,31 @@ footer {
   color: var(--text-secondary);
   font-size: 0.875rem;
   border-top: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add subtle star effect to footer */
+footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle at 10% 50%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 90% 40%, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 100px 100px;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+footer p {
+  position: relative;
+  z-index: 1;
 }
 
 /* Card Styles */
@@ -902,13 +881,29 @@ footer {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
   overflow: hidden;
+  position: relative;
+}
+
+/* Add subtle gradient background to card */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(58, 134, 255, 0.03) 0%, transparent 50%, rgba(42, 157, 143, 0.02) 100%);
+  opacity: 0.6;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .card:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  border-color: rgba(58, 134, 255, 0.2);
 }
 
 .card-header {
@@ -917,6 +912,8 @@ footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  z-index: 1;
 }
 
 .card-title {
@@ -924,15 +921,38 @@ footer {
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+}
+
+/* Add glow effect to card title */
+.card-title::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -10px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  opacity: 0.8;
+  box-shadow: 0 0 10px 2px rgba(58, 134, 255, 0.3);
+  transform: translateY(-50%);
+  z-index: -1;
 }
 
 .card-body {
   padding: 1.25rem;
+  position: relative;
+  z-index: 1;
 }
 
 .card-footer {
   padding: 1.25rem;
   border-top: 1px solid var(--border-color);
+  position: relative;
+  z-index: 1;
 }
 
 /* Button Styles */
@@ -1088,49 +1108,5 @@ footer {
   .content-header {
     padding: 1rem;
   }
-}
-
-/* Additional Space Theme Elements */
-.space-elements {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.star-particle {
-  position: absolute;
-  background-color: white;
-  border-radius: 50%;
-  opacity: 0.4;
-  animation: twinkle 4s infinite ease-in-out;
-  z-index: 0;
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 0.2; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.3); }
-}
-
-.orbit-line {
-  position: absolute;
-  width: 200px;
-  height: 300px;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotateX(80deg) rotateZ(10deg);
-  border: 1px dashed rgba(58, 134, 255, 0.1);
-  border-radius: 50%;
-  z-index: 0;
-  animation: orbit-rotate 20s linear infinite;
-}
-
-@keyframes orbit-rotate {
-  from { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(0deg); }
-  to { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(360deg); }
 }
 </style> 

@@ -299,15 +299,30 @@ export default function useDashboard() {
     scales: {
       y: {
         beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Response Time (ms)'
+        suggestedMax: 1000,
+        grid: {
+          color: 'rgba(58, 134, 255, 0.05)',
+          drawBorder: false
+        },
+        ticks: {
+          padding: 8,
+          color: 'var(--text-secondary)',
+          font: {
+            size: 11
+          }
         }
       },
       x: {
-        title: {
-          display: true,
-          text: 'Time'
+        grid: {
+          color: 'rgba(58, 134, 255, 0.05)',
+          drawBorder: false
+        },
+        ticks: {
+          padding: 8,
+          color: 'var(--text-secondary)',
+          font: {
+            size: 11
+          }
         }
       }
     }

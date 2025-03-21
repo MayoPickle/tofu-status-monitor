@@ -51,7 +51,7 @@
         :periods="chartPeriods"
         :limited="!canViewMetrics || !canAccessHistorical"
         :has-chart-data="chartData.labels.length > 0"
-        :extra-classes="{ 'limited-data': !canViewMetrics || !canAccessHistorical }"
+        :extra-classes="['response-times-card', { 'limited-data': !canViewMetrics || !canAccessHistorical }]"
       >
         <div v-if="!canAccessHistorical && selectedChartPeriod !== '24h'" class="permission-notice">
           <p>您没有查看历史数据的权限</p>
@@ -60,6 +60,7 @@
           v-else-if="chartData.labels.length && canViewMetrics" 
           :chart-data="chartData"
           :options="chartOptions"
+          class="chart-wrapper"
         />
       </ChartCard>
     </div>
