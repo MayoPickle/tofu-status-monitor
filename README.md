@@ -1,6 +1,6 @@
-# Tofu Monitor
+# Kepler
 
-A monitoring application that tracks the performance of the `https://yudoufu.org/tofu/rooms/` endpoint. The application collects metrics every 60 seconds, calculates weekly averages, and visualizes the results through a web interface.
+A monitoring application by Valtech that tracks the performance of the `https://yudoufu.org/tofu/rooms/` endpoint. The application collects metrics every 60 seconds, calculates weekly averages, and visualizes the results through a web interface.
 
 ## Technologies Used
 
@@ -20,7 +20,7 @@ A monitoring application that tracks the performance of the `https://yudoufu.org
 ## Project Structure
 
 ```
-tofu-monitor/
+kepler/
 ├── backend/              # FastAPI backend application
 │   ├── app/              # Application code
 │   │   ├── models.py     # Database models
